@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stracers"
+version = "0.2.0"
+description = "Assign stellar-tracer weights to dark matter particles in N-body halos (Laporte et al. 2013)"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [
+    { name = "Nico Garavito-Camargo" },
+    { name = "Chervin Laporte" },
+]
+dependencies = ["numpy>=1.20", "scipy>=1.7"]
+
+[project.optional-dependencies]
+io = ["h5py"]
+plot = ["matplotlib"]
+test = ["pytest", "h5py"]
+docs = ["sphinx", "sphinx-rtd-theme"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+stracers = ["data/*.csv"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

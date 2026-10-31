@@ -1,0 +1,36 @@
+\subsection{A Weighting scheme for cosmological dark matter simulations}
+The weighting scheme presented here generalises that of \cite{Bullock2005} for direct use in cosmological dark matter simulations of structure formation. Cold dark matter (just like stars in a galaxy) is collisionless and its distribution function ({\sc df}) satistfies the collisionless Boltzmann equation (CBE). Provided that the {\sc df} of the dark matter in a halo is in a steady state, Jeans' theorem guarantees the existence of a distribution function of the form $f=f(I_{1}, I_{2}, I_{3})$, where $I_{1,2,3}$ are isolating integrals of the motion. In a triaxial potential a {\sc df} of the form $f=f(H)$, where $H=\frac{1}{2}v^{2}+\Phi$ is the Hamiltonian, can always be gerenated. Generally, dark haloes are not in a steady state; their lives are continuously shaped by accretion events such mergers and infall. However, in their study of the evolution of the {\sc df} of CDM haloes, \cite{Natarajan1997} showed that between merger events haloes are in phases of ``quasi-equilibrium'' within the virialised regions. Thus, provided we restrict ourselves to the virialised regions, Jeans' theorem can be invoked to generate a stellar {\sc df} of the form $f_{*}=f_{*}(E)$.
+
+In order to generate a luminous stellar profile, we take each simulation particle of energy $E$ to simultaneously represent dark matter and stars in diferent amounts. through a weight function $\omega(E)=\frac{N_{*}(E)}{N(E)}=\frac{f_{*}(E)g(E)}{N(E)}$, where $N$ is the differential energy distribution, $g$ is the density of states and asterisks denote stellar quantities. %The differential energy distribution for the total profile of galaxies is naturally given by the simulation. 
+
+We choose the stellar distribution to be represented by the \cite{Hernquist1990} profile:
+\begin{equation}
+\nu=\frac{a}{r\left(r+a\right)^3},
+\end{equation}
+where a is the scale radius which is related to the half-mass radius through $a=r_{e}/(\sqrt{2}+1)$. The half-mass radius in projection is related to the half mass radius through $R_{e}=1.33r_{e}$
+
+We generate $f_{*}$, using Eddington's formula:
+\begin{equation}
+f_{*}(\mathcal{E})=\frac{1}{\sqrt{8}\pi^2} \int^{\mathcal{E}}_{0}\frac{d\Psi}{\sqrt{\mathcal{E}-\Psi}}\frac{d^2\nu(\Psi)}{d\Psi^2} + \frac{1}{\sqrt{\mathcal{E}}}\frac{d\nu}{d\Psi}\bigg|_{\Psi=0},
+\end{equation}
+ where  $\Psi=-\Phi+\Phi_{0}$ and $\mathcal{E}=-E+\Phi_{0}=\Psi-v^2/2$ are the relative potential and total energies respectively. The potential of an NFW profile is generally a reasonable description of the true potential and tends to zero in the limit $r$ goes to infinity thus we set $\Phi_{0}=0$.
+
+The density of states is given by:
+\begin{equation}
+g(E)=(4\pi)^2\int^{r_{E}}_{0}r^{2}\sqrt{2(E-\Phi(r))}dr.\\
+\end{equation}
+
+Equations (2) and (3) are only valid for spherical systems, however provided an educated guess, they can also be applied to triaxial ones. Indeed, authors in the past have already used the same formalism to study the distribution function of dark haloes \citep{Natarajan1997}. To compute the $\frac{{\rm d}^{2}\nu}{{\rm d}\Phi^{2}}$ term in Eddington's formula, we have to relate $\Phi$ to $\nu$ monotonically as $\Phi(r)$ is multivalued in a triaxial potential. For this, we simply approximate $\Phi(r)= <\Phi(\mathbf{r})>$. However, in the definition of the energy, we retain the actual value of the potential associated with every particle. This ensures the generation of a profile with equidensity surfaces which follow the potential.
+
+Figure 1 illustrates the kind of profile one can generate within the $z=2$ haloes of the Phoenix simulation. We have checked for the stability of our method by evolving a live dark halo for 150 Myr. We further looked for isolated galaxies in haloes which have not experienced any stellar mass growth between $z=2$ and $z=0$. We present such an example in Figure 2. This halo has grown in dark matter mass by a factor of two but its stellar mass profile has remained unchanged over 10 Gyr. However, the half-light radius (defined as the radius of a sphere containing half the total stellar mass) has increased by 30 percent. Although this is not a substantial problem for studying the evolution of BCGs, where the change in radius is much larger and primarily caused by material deposited on the outside of the galaxy \citep{Laporte2012} it warns us that our experiment is close to the resolution limit for studying the size growth of galaxies which do not accrete much stellar mass. Considering the large period of time over which this test has been carried out, we see that two-body relaxation processes are not the driving force behind the size growth we observe for the most massive galaxies.
+
+\begin{figure}
+\includegraphics[width=0.5\textwidth,trim=10mm 15mm 0mm 10mm,clip]{stuff_6.ps}
+\caption{Example $\rho r^{2}$ profile for a typical compact stellar profile generated using our weighting scheme. The dip is due to low particle numbers in the region below 1 kpc. Arrows mark the radii containing 50 and 95 percent of the stellar mass.}
+\end{figure}
+
+\begin{figure}
+\includegraphics[width=0.5\textwidth,trim=0mm 0mm 0mm 0mm,clip]{Phe_testing_bis2.ps}
+\caption{{\it Top}:$\rho r^{2}$ profile for a galaxy which has evolved from $z=2$ (dashed line) to $z=0$ (solid line) without experiencing mergers or interactions with other haloes populated with stars. The host dark matter halo has grown in mass and half-mass radius by a factor of 2. This does not, however, translate in significant size growth of the stellar component. The arrows mark the radii enclosing 50 percent of the mass of the galaxies. {\it Bottom}: $\rho r^{2}$ profiles for a BCG most massive progenitor (dashed black line), and final $z=0$ BCG (red line). We also show the distribution of the stars in the BCG most massive progenitor at $z=0$ (solid black line). The BCG grew by a factor of four in stellar mass and nine in size. The black and red arrows show the radii enclosing 50 percent of the mass of the most massive BCG progenitor at $z=2$ and BCG at $z=0$ respectively. Clearly, the size growth observed for these galaxies is not due to two-body relaxation processes.}
+\end{figure}
+
