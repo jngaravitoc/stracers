@@ -3,7 +3,8 @@ Milky Way stellar halo density profiles from the literature.
 
 The profiles are the simple and broken power laws compiled in Table 6 of
 Medina et al. 2024, MNRAS, 531, 4762 (doi:10.1093/mnras/stae1137), and the
-doubly broken power law of Li et al. 2025 (arXiv:2512.01350), stored in
+doubly broken power law of Li et al. 2026, ApJ, 999, 108
+(doi:10.3847/1538-4357/ae41b9), stored in
 ``stracers/data/mw_stellar_halo_profiles.csv``. They are spherical number
 density profiles of halo stars, fitted only over the radial range listed for
 each one (``r_min`` to ``r_max``).

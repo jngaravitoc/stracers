@@ -1,6 +1,7 @@
 # Milky Way stellar halo number density profiles, rho(r) ~ r^slope (spherical).
 # Compiled in Medina et al. 2024, MNRAS, 531, 4762, Table 6 (doi:10.1093/mnras/stae1137).
-# li2025 is not in the compilation: Li et al. 2025 (DESI DR2 K giants), Table 1, row "Halo".
+# li2026 is not in the compilation: Li et al. 2026, ApJ, 999, 108 (doi:10.3847/1538-4357/ae41b9; DESI DR2 K giants),
+#   Table 1, row "Halo".
 # model: spl = simple power law (slope); bpl = broken power law (r_break, inner_slope, outer_slope);
 #   tpl = power law with two breaks (r_break, r_break2, inner_slope, middle_slope, outer_slope).
 # Errors are given as positive minus/plus uncertainties; empty fields mean not available.
@@ -38,4 +39,4 @@ fukushima2019,bpl,,,,160,19,18,-2.9,0.3,0.3,-15.0,3.7,4.5,35,360,BHB stars,Fukus
 stringer2021,bpl,,,,32.1,0.9,1.1,-2.54,0.09,0.09,-5.42,0.14,0.13,9,100,RRLs,Stringer et al. 2021,,2011.13930,,,,,,,
 chen2023,bpl,,,,31.11,5.88,7.61,-2.46,0.2,0.18,-3.99,1.33,0.75,,80,RRLs,Chen et al. 2023,range quoted as <80 kpc,2307.15385,,,,,,,
 medina2024,bpl,,,,18.1,1.1,2.1,-2.05,0.15,0.13,-4.47,0.18,0.11,7,145,RRLs,Medina et al. 2024,,2402.14055,,,,,,,
-li2025,tpl,,,,16.0,0.20,0.25,-1.50,0.07,0.07,-5.20,0.14,0.14,8,200,K giants,Li et al. 2025,"triaxial fit (p = 0.85, q = 0.74, tilted 44 deg from the disc); slopes in the ellipsoidal radius",2512.01350,,76.3,1.94,2.37,-3.45,0.02,0.02
+li2026,tpl,,,,16.0,0.20,0.25,-1.50,0.07,0.07,-5.20,0.14,0.14,8,200,K giants,Li et al. 2026,"triaxial fit (p = 0.85, q = 0.74, tilted 44 deg from the disc); slopes in the ellipsoidal radius",2512.01350,,76.3,1.94,2.37,-3.45,0.02,0.02

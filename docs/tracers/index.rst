@@ -63,8 +63,8 @@ extrapolated profile::
     'medina2024'
     >>> choose_fit("BHB", (20, 100))        # the only BHB fit covering 20-100 kpc
     'thomas2018'
-    >>> choose_fit("K-giant", (20, 100))    # Li+2025 (8-200 kpc), two breaks
-    'li2025'
+    >>> choose_fit("K-giant", (20, 100))    # Li+2026 (8-200 kpc), two breaks
+    'li2026'
     >>> choose_fit("M giants", (20, 100))   # warns: the only M-giant fit stops at 90 kpc
     'lopezcorredoira2024_m'
 

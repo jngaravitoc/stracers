@@ -14,7 +14,7 @@ def test_table_contents():
     assert len(set(keys)) == len(keys)
     assert len(mw.available("spl")) == 16
     assert len(mw.available("bpl")) == 15
-    assert mw.available("tpl") == ["li2025"]
+    assert mw.available("tpl") == ["li2026"]
     for e in table:
         if e["model"] == "spl":
             assert e["slope"] is not None
@@ -36,22 +36,22 @@ def test_medina2024_entry():
         mw.get_entry("nonexistent2099")
 
 
-def test_li2025_entry():
-    """Li et al. 2025, Table 1, whole halo."""
-    e = mw.get_entry("li2025")
+def test_li2026_entry():
+    """Li et al. 2026, Table 1, whole halo."""
+    e = mw.get_entry("li2026")
     assert (e["r_break"], e["r_break2"]) == (16.0, 76.3)
     assert (e["r_break_err_minus"], e["r_break_err_plus"]) == (0.2, 0.25)
     assert (e["r_break2_err_minus"], e["r_break2_err_plus"]) == (1.94, 2.37)
     assert (e["inner_slope"], e["middle_slope"], e["outer_slope"]) == (-1.5, -3.45, -5.2)
     assert (e["r_min"], e["r_max"], e["tracer"]) == (8.0, 200.0, "K giants")
-    assert mw.reference_url("li2025") == "https://arxiv.org/abs/2512.01350"
-    nu = mw.mw_profile("li2025", r_core=0.0, smoothness=0.0)
+    assert mw.reference_url("li2026") == "https://arxiv.org/abs/2512.01350"
+    nu = mw.mw_profile("li2026", r_core=0.0, smoothness=0.0)
     r = np.array([10.0, 12.0, 30.0, 40.0, 100.0, 120.0])
     assert np.allclose(np.diff(np.log(nu(r)))[::2] / np.diff(np.log(r))[::2], [-1.5, -3.45, -5.2])
     # drawn parameters keep the breaks in order
     rng = np.random.default_rng(3)
     for _ in range(200):
-        p = mw.mw_profile("li2025", rng=rng).params
+        p = mw.mw_profile("li2026", rng=rng).params
         assert 0 < p["r_break"] < p["r_break2"]
 
 
@@ -107,7 +107,7 @@ def test_mw_profile_parameters_and_sampling():
     assert a == b
 
 
-@pytest.mark.parametrize("key", ["medina2024", "feng2024", "fukushima2019", "li2025"])
+@pytest.mark.parametrize("key", ["medina2024", "feng2024", "fukushima2019", "li2026"])
 def test_mw_profile_recovered(hernquist_halo, key):
     halo = hernquist_halo
     nu = mw.mw_profile(key)

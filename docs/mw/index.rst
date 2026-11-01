@@ -10,7 +10,7 @@ Introduction
 `stracers.mw` provides the 31 simple and broken power-law fits to the number
 density of the Milky Way stellar halo compiled by Medina et al. (2024, MNRAS,
 531, 4762, Table 6), and the power law with two breaks fitted by Li et al.
-(2025) to DESI DR2 K giants, 32 profiles in all. The data are in
+(2026) to DESI DR2 K giants, 32 profiles in all. The data are in
 ``src/stracers/data/mw_stellar_halo_profiles.csv``, with the uncertainties,
 the radial range of each fit, the tracer and the reference.
 
@@ -41,7 +41,7 @@ Broken power laws (``"bpl"``), with slope :math:`\gamma_{in}` inside
 
 A power law with two breaks (``"tpl"``), with slope :math:`\gamma_{in}`
 inside :math:`r_{break}`, :math:`\gamma_{mid}` between the breaks and
-:math:`\gamma_{out}` outside :math:`r_{break,2}`. It is from Li et al. (2025,
+:math:`\gamma_{out}` outside :math:`r_{break,2}`. It is from Li et al. (2026,
 Table 1, whole halo), not from the compilation:
 
 .. csv-table::
@@ -173,7 +173,7 @@ Caveats
 =======
 
 - The fits are **spherical**, while several of the papers fit flattened haloes;
-  only the radial profile is kept. For Li et al. (2025), a triaxial halo
+  only the radial profile is kept. For Li et al. (2026), a triaxial halo
   (axis ratios 1 : 0.85 : 0.74, tilted by 44° from the disc), the radius of the
   profile is the ellipsoidal radius.
 - Each fit is only valid over its range (mostly ~5–100 kpc). Outside it the
@@ -182,7 +182,7 @@ Caveats
 References
 ==========
 
-The compilation (all but ``li2025``) is from
+The compilation (all but ``li2026``) is from
 
 - Medina, G. E., et al. 2024, MNRAS, 531, 4762,
   `arXiv:2402.14055 <https://arxiv.org/abs/2402.14055>`__,
@@ -191,6 +191,12 @@ The compilation (all but ``li2025``) is from
 and the fits are from
 
 .. include:: references.inc
+
+The published reference of ``li2026`` is
+
+- Li, S., Wang, W., Koposov, S. E., et al. 2026, ApJ, 999, 108,
+  `arXiv:2512.01350 <https://arxiv.org/abs/2512.01350>`__,
+  `doi:10.3847/1538-4357/ae41b9 <https://doi.org/10.3847/1538-4357/ae41b9>`__
 
 API
 ===

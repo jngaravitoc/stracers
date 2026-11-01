@@ -77,7 +77,7 @@ optional core radius. For example,
 `stracers.mw` provides 32 Milky Way stellar halo profiles, stored in
 `src/stracers/data/mw_stellar_halo_profiles.csv`: the 31 simple and broken power
 laws compiled in Medina et al. (2024, MNRAS 531, 4762, Table 6), and the power law
-with two breaks of Li et al. (2025, DESI DR2 K giants; `"li2025"`):
+with two breaks of Li et al. (2026, DESI DR2 K giants; `"li2026"`):
 
 ```python
 from stracers import mw
