@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file. Versions fo
 change the API. Each release is tagged `vX.Y.Z` in git.
 
 ## [Unreleased]
+### Added
+- `CONTRIBUTING.md`: development setup, workflow, tests, documentation and release steps
 
 ## [0.3.0] - 2026-11-01
 ### Added

@@ -143,6 +143,11 @@ profiles, star counts and some defaults (`rmax=300`) assume kpc. See the
 [Units](https://jngaravitoc.github.io/stracers/units.html) page for
 cosmological snapshots, N-body units, and two quick checks of the inputs.
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the development setup, tests, documentation and release
+steps.
+
 ## Citing
 
 If you use `stracers`, please cite Laporte et al. (2013, MNRAS, 435, 901;
