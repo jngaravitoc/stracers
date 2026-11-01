@@ -342,7 +342,9 @@ is listed in the API below.
    :math:`N(E)` only counts particles inside that radius (``res.r_range[1]``,
    the outermost selected particle unless sparse outer bins were dropped), so
    :math:`g` must be truncated in the same way for :math:`f_{DM} = N/g` to be
-   unbiased.
+   unbiased. With ``derivative="gradient"`` the grid only has the bins kept,
+   so particles in a dropped intermediate bin are left out of :math:`N(E)`
+   too; the spline grid is continuous across such a bin.
 7. **Eddington inversion** (`eddington`, `outer_eddington`). :math:`f_*` is
    evaluated at :math:`\mathcal{E} = -E` for each bin. Inside the data
    (:math:`\Psi \ge \Psi(r_{max})`), :math:`d^2\nu/d\Psi^2` is taken as constant
@@ -352,7 +354,10 @@ is listed in the API below.
    power law, with the slope measured as a secant over the outermost
    ``dlogr`` of the grid, and the integral is done in closed form with the
    incomplete beta function, evaluated in log space so that steep profiles do
-   not overflow.
+   not overflow. Where that slope differs from the derivative at the end of
+   the grid, :math:`d\nu/d\Psi` jumps at :math:`\Psi_{min}`, and the term
+   :math:`\Delta(d\nu/d\Psi)/\sqrt{\mathcal{E}-\Psi_{min}}` that the jump
+   adds to Eq. :eq:`eddington` is included.
    Bins with :math:`f_* < 0` are set to zero and counted in
    ``n_negative_f``. With ``r_trunc``, :math:`f_*` and the weights of all
    particles with :math:`E > \Phi(r_t)` are set to zero.

@@ -12,12 +12,16 @@ change the API. Each release is tagged `vX.Y.Z` in git.
   ~30% too low (self-consistent test halo). The fine grid now covers the radial range of the bins,
   and N(E) only counts particles inside the volume covered by g(E)
 - The inner sphere of g(E) uses the inner edge of the first radial bin
+- With `derivative="gradient"`, particles in a dropped intermediate radial bin are left out of
+  N(E), as their shell is not in g(E)
 - The power-law extension of the Eddington integral beyond the grid uses a secant slope over the
-  outermost radial bin instead of the derivative at the last grid point
+  outermost radial bin instead of the derivative at the last grid point, and the contribution of
+  the resulting jump in dnu/dpsi at the end of the grid is included
 
 ### Changed
-- `radial_potential` also returns the radial range of the bins kept; `smooth_potential` takes it
-  as `r_range`; `eddington` takes an optional `outer_slope`; `WeightsResult` has a `r_range` field
+- `radial_potential` also returns the edges of the bins kept; `smooth_potential` takes a radial
+  range `r_range`; `eddington` takes an optional `outer_slope`; `WeightsResult` has `r_range` and
+  `bin_edges` fields
 
 ## [0.2.0] - 2026-10-31
 The untested `Stracers` package was rewritten as the `stracers` library.

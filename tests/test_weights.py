@@ -6,7 +6,7 @@ from scipy.integrate import quad
 
 from conftest import G, hernquist_df, weighted_density
 from stracers import compute_weights, get_profile, truncate
-from stracers.weights import density_of_states
+from stracers.weights import density_of_states, eddington
 
 
 def run(halo, profile, **kwargs):
@@ -305,3 +305,70 @@ def test_profile_vanishing_at_rmax_no_warning(hernquist_halo):
         warnings.filterwarnings("ignore", message=".*f\\(E\\) < 0.*")
         res = compute_weights(halo["pos"], halo["vel"], halo["pot"], halo["mass"], nu_t)
     assert np.all(np.isfinite(res.weights))
+
+
+def test_gradient_mode_excludes_dropped_intermediate_shell(hernquist_halo):
+    """derivative="gradient": g(E) only covers the bins kept, so particles in
+    a dropped intermediate shell must not be counted in N(E). The spline grid
+    is continuous across the gap, so there they are counted."""
+    halo = hernquist_halo
+    r = np.linalg.norm(halo["pos"], axis=1)
+    keep = ~((r > 20.0) & (r < 32.0)) | (np.arange(len(r)) % 2000 == 0)  # empty a shell
+    sub = {k: (v[keep] if np.ndim(v) else v) for k, v in halo.items() if k != "ids"}
+    r_sub = r[keep]
+    nu = get_profile("hernquist", a=2.0)
+
+    res = run(sub, nu, derivative="gradient")
+    lo, hi = res.bin_edges[:, 0], res.bin_edges[:, 1]
+    gaps = lo[1:] > hi[:-1] * (1 + 1e-12)
+    assert np.any(gaps), "the test needs a dropped intermediate bin"
+    in_bins = np.zeros(len(r_sub), dtype=bool)
+    for a, b in res.bin_edges:
+        in_bins |= (r_sub >= a) & (r_sub <= b)
+    covered = res.mask & ((r_sub < res.r_range[0]) | in_bins)
+    counted = np.sum(res.N_E * np.diff(res.E_edges))
+    assert counted == pytest.approx(sub["mass"] * covered.sum())
+    assert covered.sum() < res.mask.sum()  # the shell's particles were left out
+
+    res = run(sub, nu, derivative="spline")
+    counted = np.sum(res.N_E * np.diff(res.E_edges))
+    assert counted == pytest.approx(sub["mass"] * np.sum(res.mask & (r_sub <= res.r_range[1])))
+
+
+def test_outer_slope_jump_is_accounted():
+    """The power-law extension with a slope different from the interior
+    derivative puts a jump in dnu/dpsi at psi_min; its contribution must be
+    included so that the DF does not depend on the slope chosen when nu(psi)
+    is an exact power law, and is consistent otherwise."""
+    k = 3.0
+    psi = np.linspace(1.0, 10.0, 4000)[::-1]           # decreasing with radius
+    nu = psi**k
+    dnu = k * psi ** (k - 1)
+    d2 = k * (k - 1) * psi ** (k - 2)
+    eps = np.array([0.5, 2.0, 5.0, 9.0])
+    f_local = eddington(eps, psi, d2, nu, dnu)
+    f_exact = eddington(eps, psi, d2, nu, dnu, outer_slope=k)
+    np.testing.assert_allclose(f_exact, f_local, rtol=1e-12)
+    # the analytic DF of nu = psi^k: k (k-1) B(k-1, 1/2) eps^(k-3/2) / (sqrt(8) pi^2)
+    from scipy.special import beta
+    f_true = k * (k - 1) * beta(k - 1, 0.5) * eps ** (k - 1.5) / (np.sqrt(8) * np.pi**2)
+    np.testing.assert_allclose(f_exact, f_true, rtol=1e-3)
+
+    # with a different extension slope, nu is continuous at psi_min and the
+    # jump term keeps the result equal to the DF of that piecewise profile:
+    # interior psi^k joined to (psi/psi_min)^k2 below psi_min
+    k2 = 4.0
+    f_jump = eddington(eps, psi, d2, nu, dnu, outer_slope=k2)
+    pm, num = psi[-1], nu[-1]
+    grid = np.linspace(1e-6, 10.0, 400001)
+    nu_pw = np.where(grid >= pm, grid**k, num * (grid / pm) ** k2)
+    d1_pw = np.gradient(nu_pw, grid)
+    # Eddington in the integrated-by-parts form avoids the delta function:
+    # f = d/deps [ int_0^eps dnu/dpsi / sqrt(eps - psi) dpsi ] / (sqrt(8) pi^2)
+    def inner(e):
+        g = grid[grid < e]
+        return np.trapz(np.interp(g, grid, d1_pw) / np.sqrt(e - g + 1e-300), g)
+    h = 1e-3
+    f_ref = np.array([(inner(e + h) - inner(e - h)) / (2 * h) for e in eps]) / (np.sqrt(8) * np.pi**2)
+    above = eps > pm
+    np.testing.assert_allclose(f_jump[above], f_ref[above], rtol=2e-2)
