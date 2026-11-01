@@ -7,8 +7,8 @@ Medina et al. 2024, MNRAS, 531, 4762 (doi:10.1093/mnras/stae1137), stored in
 density profiles of halo stars, fitted only over the radial range listed for
 each one (``r_min`` to ``r_max``).
 
-Example
--------
+Examples
+--------
 >>> from stracers import mw
 >>> mw.available()[:3]
 ['wetterer1996', 'vivas2006', 'bell2008']

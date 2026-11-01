@@ -263,3 +263,14 @@ def test_total_mass_power_law_profiles(hernquist_halo):
         run(halo, spl, stellar_mass=1e9, within="total")
     res = run(halo, truncate(spl, 150.0), stellar_mass=1e9, within="total", rmax=rmax)
     assert 0 < res.stellar_mass < 1e9
+
+
+def test_profile_vanishing_at_rmax_no_warning(hernquist_halo):
+    """A taper that underflows to zero at rmax must not warn about 0/0."""
+    halo = hernquist_halo
+    nu_t = truncate(get_profile("hernquist", a=2.0), r_t=50.0, sharpness=4)
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", RuntimeWarning)
+        warnings.filterwarnings("ignore", message=".*f\\(E\\) < 0.*")
+        res = compute_weights(halo["pos"], halo["vel"], halo["pot"], halo["mass"], nu_t)
+    assert np.all(np.isfinite(res.weights))

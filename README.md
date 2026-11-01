@@ -52,7 +52,7 @@ w_later = stracers.match_weights(ids_w, w, ids_later_snapshot)
 `res` also contains the diagnostics: ψ(r), ν, dν/dψ, d²ν/dψ², N(E), g(E), f(E)
 and the binned weights. `stracers.plotting.plot_diagnostics(res)` plots them.
 
-See [examples/hernquist_tracers.ipynb](examples/hernquist_tracers.ipynb).
+See [tutorials/hernquist_tracers.ipynb](tutorials/hernquist_tracers.ipynb).
 
 Available profiles: `plummer(a)`, `hernquist(a)`, `nfw(rs, rvir)`, and
 `einasto(n, r_eff)` (normalised to unit mass), and power laws with your own
@@ -70,6 +70,19 @@ stored in `src/stracers/data/mw_stellar_halo_profiles.csv`:
 from stracers import mw
 nu = mw.mw_profile("medina2024")                      # cored (1 kpc), smoothed break
 nu = mw.mw_profile("medina2024", rng=np.random.default_rng(0))   # parameters drawn within errors
+```
+
+## Counting stars
+
+`stracers.number_of_stars` gives the number of stars in a range of
+galactocentric radius for any profile, or any key in `stracers.mw`, with
+optional flattening and survey area. For example, this reproduces Medina et
+al. (2024, Sect. 5.2.1):
+
+```python
+stracers.number_of_stars("medina2024", [100, 230], r_max=300,
+                         n_ref=3000, ref_range=(100, 300))      # -> [3000, 356]
+stracers.number_of_stars_table(230, r_max=300, n_ref=3000, ref_range=(100, 300))
 ```
 
 ## Units
@@ -100,14 +113,28 @@ kpc, km/s, Msun, potential in (km/s)², G = 4.30071e-6 kpc (km/s)² / Msun
 
 ## Documentation
 
-The full documentation is in [docs/](docs/). It covers the method (Laporte+13),
-how the code works step by step, a usage guide and the API reference. To build
-it:
+The documentation is in [docs/](docs/) and is published at
+<https://jngaravitoc.github.io/tracers_triaxial/>. It has installation
+instructions, a getting-started guide, a tutorial, and a user guide with one
+page per module (the method, how the code works, and the API). To build it:
 
 ```bash
 pip install -e ".[docs]"
-make -C docs html        # open docs/_build/html/index.html
+make -C docs html                                  # docs/_build/html/index.html
+pytest --doctest-plus --doctest-rst docs/          # test the examples in the pages
 ```
+
+## Versions and releases
+
+The version is defined once, in `src/stracers/__init__.py` (`__version__`), and follows
+[semantic versioning](https://semver.org); changes are listed in [CHANGELOG.md](CHANGELOG.md). To
+make a release:
+
+1. Move the entries under `## [Unreleased]` in `CHANGELOG.md` to a new `## [X.Y.Z] - YYYY-MM-DD`
+   section, and set `__version__ = "X.Y.Z"`.
+2. Run `pytest`; `tests/test_version.py` checks that the version and the changelog agree.
+3. Commit on `master`, then tag and push the tag:
+   `git tag -a vX.Y.Z -m "stracers X.Y.Z"` and `git push origin vX.Y.Z`.
 
 ## Tests
 
@@ -116,9 +143,15 @@ pytest
 ```
 
 The tests sample an isotropic Hernquist halo from its analytic distribution
-function. They check that the Eddington inversion recovers the analytic DF,
-that self-consistent weights are constant, and that the Hernquist, Plummer and
-Einasto tracer profiles are recovered to within 10%.
+function. They check that:
+
+- the Eddington inversion recovers the analytic DF and g(E);
+- self-consistent weights are constant;
+- analytic, power-law and Milky Way tracer profiles are recovered to within
+  10%;
+- the mass options and truncation behave as documented;
+- star counts match analytic power laws and the numbers of Medina et al.
+  (2024).
 
 ## Legacy code
 

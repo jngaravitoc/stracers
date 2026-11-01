@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "stracers"
-version = "0.2.0"
+dynamic = ["version"]
 description = "Assign stellar-tracer weights to dark matter particles in N-body halos (Laporte et al. 2013)"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -18,7 +18,18 @@ dependencies = ["numpy>=1.20", "scipy>=1.7"]
 io = ["h5py"]
 plot = ["matplotlib"]
 test = ["pytest", "h5py"]
-docs = ["sphinx", "sphinx-rtd-theme"]
+docs = [
+    "sphinx",
+    "sphinx-astropy",
+    "pydata-sphinx-theme",
+    "myst-nb",
+    "ipykernel",  # to run the tutorial notebook
+    "matplotlib",
+    "h5py",
+]
+
+[tool.setuptools.dynamic]
+version = {attr = "stracers.__version__"}
 
 [tool.setuptools.packages.find]
 where = ["src"]

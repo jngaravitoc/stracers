@@ -1,31 +1,33 @@
+.. module:: stracers
+
+********
 stracers
-========
+********
 
-``stracers`` assigns stellar-tracer weights to the dark matter (DM) particles of
-an N-body halo, using the particle-tagging scheme of
-`Laporte et al. (2013) <https://arxiv.org/abs/1301.5319>`_.
+``stracers`` paints stellar haloes onto the dark matter particles of N-body
+simulations. It gives each dark matter particle a weight, the amount of stellar
+mass it carries, following the particle-tagging scheme of `Laporte et al.
+(2013) <https://arxiv.org/abs/1301.5319>`_. The weighted particles follow a
+chosen stellar density profile while staying in equilibrium in the halo
+potential, including in triaxial haloes. The weights belong to particle IDs, so
+the stars can be followed through any later snapshot.
 
-Every DM particle stands for both dark matter and stars, in different amounts.
-The amount of stars is set by a weight :math:`w(E)` that depends only on the
-particle's energy. The weights are chosen so that the weighted particles follow
-a chosen stellar density profile :math:`\nu(r)`, for example a Hernquist
-profile, while staying in equilibrium in the halo potential. Weights belong to
-particle IDs, so the stars can be followed through any later snapshot of the
-simulation.
+``stracers`` works on plain NumPy arrays (positions, velocities, potential and
+mass), so it can be used with any simulation code. It also provides the Milky
+Way stellar halo density profiles compiled by Medina et al. (2024), and star
+counts for a halo or a survey.
 
-.. code-block:: python
-
-   import stracers
-
-   nu = stracers.get_profile("hernquist", a=2.0)
-   res = stracers.compute_weights(pos, vel, pot, mass, nu, stellar_mass=1e8, rmax=250)
-   m_star = res.weights * mass          # stellar mass carried by each DM particle
+``stracers`` is developed in a `public repository on GitHub
+<https://github.com/jngaravitoc/tracers_triaxial>`_. Bug reports and feature
+requests are welcome as `GitHub issues
+<https://github.com/jngaravitoc/tracers_triaxial/issues>`_.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
+   :titlesonly:
 
-   method
-   implementation
-   usage
-   api
-   references
+   install
+   getting_started
+   tutorials
+   user_guide
+   changes
