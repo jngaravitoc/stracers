@@ -319,8 +319,10 @@ is listed in the API below.
    formula needs :math:`d^2\nu/d\Psi^2`, and differentiating twice amplifies
    noise. A quartic smoothing spline is fitted to :math:`\Phi(\ln r)`,
    weighted by the inverse standard errors, and resampled on ``n_fine``
-   radii. With ``derivative="gradient"`` the binned potential is used
-   directly.
+   logarithmic cells that cover exactly the radial range of the bins kept,
+   from the inner edge of the first to the outer edge of the last (half a bin
+   beyond the first and last bin centres). With ``derivative="gradient"`` the
+   binned potential is used directly.
 4. **Tracer derivatives** (`tracer_derivatives`). :math:`d\nu/d\Psi` and
    :math:`d^2\nu/d\Psi^2` by second-order finite differences on the radial
    grid.
@@ -336,17 +338,21 @@ is listed in the API below.
       g(E) \simeq (4\pi)^2 \left[\frac{r_{in}^3}{3}\sqrt{2(E-\Phi_1)}
       + \sum_{k:\,\Phi_k<E} r_k^2\, \Delta r_k \sqrt{2(E - \Phi_k)}\right].
 
-   The sum stops at the outermost bin, not at :math:`r_E`: :math:`N(E)` only
-   counts particles inside ``rmax``, so :math:`g` must be truncated in the
-   same way for :math:`f_{DM} = N/g` to be unbiased.
+   The sum stops at the outer edge of the outermost bin, not at :math:`r_E`:
+   :math:`N(E)` only counts particles inside that radius (``res.r_range[1]``,
+   the outermost selected particle unless sparse outer bins were dropped), so
+   :math:`g` must be truncated in the same way for :math:`f_{DM} = N/g` to be
+   unbiased.
 7. **Eddington inversion** (`eddington`, `outer_eddington`). :math:`f_*` is
    evaluated at :math:`\mathcal{E} = -E` for each bin. Inside the data
    (:math:`\Psi \ge \Psi(r_{max})`), :math:`d^2\nu/d\Psi^2` is taken as constant
    on each segment and :math:`1/\sqrt{\mathcal{E}-\Psi}` is integrated
    exactly, which removes the noise from the integrable singularity. Beyond
    the data (``boundary_term=True``), :math:`\nu(\Psi)` is extrapolated as a
-   power law and the integral is done in closed form with the incomplete beta
-   function, evaluated in log space so that steep profiles do not overflow.
+   power law, with the slope measured as a secant over the outermost
+   ``dlogr`` of the grid, and the integral is done in closed form with the
+   incomplete beta function, evaluated in log space so that steep profiles do
+   not overflow.
    Bins with :math:`f_* < 0` are set to zero and counted in
    ``n_negative_f``. With ``r_trunc``, :math:`f_*` and the weights of all
    particles with :math:`E > \Phi(r_t)` are set to zero.

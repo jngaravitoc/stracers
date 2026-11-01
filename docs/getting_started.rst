@@ -52,7 +52,7 @@ the same shells, computed from its enclosed mass fraction
     >>> enclosed = np.array([stracers.mass_fraction_within(nu, x) for x in edges])
     >>> expected = 1e8 * np.diff(enclosed) / stracers.mass_fraction_within(nu, 250.0)
     >>> print(np.round(m_shell / expected, 2))
-    [0.99 1.02 1.01 1.02 1.  ]
+    [0.98 1.02 1.01 1.02 1.  ]
 
 Following the stars
 ===================
