@@ -23,6 +23,8 @@ Input                 Description
 ``tracer_profile``    a function ν(r); its normalisation does not matter
 ====================  ==============================================================
 
+Any consistent set of units works; see :doc:`../units`.
+
 The examples on this page use an isotropic Hernquist halo of 10\ :sup:`10` M☉
 and scale radius 10 kpc, sampled with `stracers.halos.sample_hernquist`::
 

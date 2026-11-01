@@ -18,6 +18,8 @@ change the API. Each release is tagged `vX.Y.Z` in git.
   `velocity_profile` (radial profiles of mean velocities, dispersions, anisotropy and effective
   number of particles), tested against the Jeans equation; a user-guide page and the tutorial
   `tutorials/tracer_kinematics.ipynb`
+- Units page in the documentation: consistent units, what assumes kpc, cosmological snapshots, the
+  zero point of the potential, and two checks of the inputs
 
 ## [0.2.1] - 2026-10-31
 ### Fixed

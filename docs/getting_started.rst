@@ -11,7 +11,8 @@ A halo
 
 `stracers.compute_weights` takes plain arrays: positions [kpc], velocities
 [km/s], the potential of each particle [(km/s)²], zero at infinity, and the
-particle mass [M☉]. Any snapshot reader can provide them. Here an isotropic
+particle mass [M☉]. Any snapshot reader can provide them, in any consistent
+set of units (see :doc:`units`). Here an isotropic
 Hernquist halo of 10\ :sup:`10` M☉ and scale radius 10 kpc, sampled with
 `stracers.halos.sample_hernquist`, stands in for a snapshot::
 

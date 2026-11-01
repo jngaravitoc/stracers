@@ -100,8 +100,12 @@ stracers.number_of_stars_table(230, r_max=300, n_ref=3000, ref_range=(100, 300))
 
 ## Units
 
-kpc, km/s, Msun, potential in (km/s)², G = 4.30071e-6 kpc (km/s)² / Msun
-(Gadget conventions). The potential should be zero at infinity.
+The weights and kinematics work in any **consistent** units: the potential must
+be in the units of the velocities squared, and zero at infinity, and all radii
+in one length unit. The docs use kpc, km/s, Msun and (km/s)²; the Milky Way
+profiles, star counts and some defaults (`rmax=300`) assume kpc. See the
+[Units](https://jngaravitoc.github.io/stracers/units.html) page for
+cosmological snapshots, N-body units, and two quick checks of the inputs.
 
 ## Notes on the method
 
