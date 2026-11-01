@@ -85,6 +85,21 @@ v_r, v_theta, v_phi = stracers.kinematics.spherical_velocities(pos, vel)
 
 See [tutorials/tracer_kinematics.ipynb](tutorials/tracer_kinematics.ipynb).
 
+## Mock tracer populations
+
+Paint a population of a given tracer in a radial range, using the most recent literature profile for
+it that covers the range:
+
+```python
+pop = stracers.paint_tracer(pos, vel, pot, mass, "RRLyr", r_range=(20, 100), n_stars=3000)
+pop.key, pop.n_stars                    # fit used (medina2024), stars of the tracer per particle
+prof = pop.velocity_profile(bins=8)     # kinematics of the population
+idx = pop.draw_stars(rng=0)             # mock catalogue: particle index of each star
+```
+
+Tracers: "RR Lyrae" ("RRLyr"), "BHB", "K giants" ("K-giant"), "M giants", "Giants", "MSTO",
+"F stars", "A-type stars".
+
 ## Counting stars
 
 `stracers.number_of_stars` gives the number of stars in a range of
