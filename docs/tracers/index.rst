@@ -133,6 +133,75 @@ positions and velocities are those of their particles::
     >>> stars_pos.shape
     (2958, 3)
 
+Following a population through a simulation
+============================================
+
+The usual workflow is to paint the population once, e.g. on a relaxed snapshot
+early in the simulation, and observe it in later snapshots. The stars belong
+to particle IDs: pass ``ids`` to `~stracers.paint_tracer`, and place the
+population on another snapshot with `~stracers.TracerPopulation.at_snapshot`.
+The stars of each particle follow it by ID, the radial range is selected again
+where the particles are now, and the stars are **conserved**, not renormalised:
+the number in the range changes as they move::
+
+    >>> ids = np.arange(100_000)
+    >>> pop = stracers.paint_tracer(pos, vel, pot, mass, "RRLyr", r_range=(20, 100),
+    ...                             n_stars=3000, ids=ids, snapshot="000")
+    >>> order = np.random.default_rng(0).permutation(100_000)    # a later snapshot: reordered,
+    >>> later = pop.at_snapshot(ids[order], 1.1 * pos[order], vel[order],  # and expanded by 10%
+    ...                         snapshot="010")
+    >>> print(f"{later.total:.0f} stars in range, {later.matched_fraction:.3f} of the population matched")
+    3400 stars in range, 1.000 of the population matched
+
+Give the halo centre of each snapshot as ``center``. Particles missing from
+a snapshot lose their stars, and a warning is issued if more than 1% of the
+stars are lost.
+
+Saving a population
+-------------------
+
+`~stracers.TracerPopulation.save` writes the particle IDs, the stars of each
+particle and the metadata to an HDF5 file, and `~stracers.load_population`
+reads it back. A loaded population is placed on any snapshot with
+`~stracers.TracerPopulation.at_snapshot`, without computing the weights
+again, so each snapshot can be processed in a separate job::
+
+    >>> import os, tempfile
+    >>> fname = os.path.join(tempfile.mkdtemp(), "rrl.h5")
+    >>> pop.save(fname)
+    >>> loaded = stracers.load_population(fname)
+    >>> print(loaded.key, loaded.snapshot, f"{loaded.at_snapshot(ids, pos, vel).total:.0f}")
+    medina2024 000 3000
+
+Stationarity and stars beyond rmax
+----------------------------------
+
+A population whose stars depend only on energy is a steady state in a static
+potential, so in an isolated halo in equilibrium it does not evolve. For that,
+`~stracers.paint_tracer` gives stars to every particle according to its
+energy, **including the particles beyond rmax** (``beyond_rmax="energy"`` in
+`~stracers.compute_weights`). Otherwise, stars on orbits that reach beyond
+``rmax`` would be missing and the population would drift outwards.
+
+On a 10\ :sup:`6`-particle sample of an isolated Milky Way simulation (10\ :sup:`8`
+particles, radially anisotropic halo with :math:`\beta` from 0.16 to 0.48),
+RR Lyrae and BHB populations painted at :math:`t = 2.2` keep their number of
+stars in 20–100 kpc to 0.3%, their shell counts to 2% and :math:`\sigma_r` to
+0.4% until :math:`t = 5` (time units of 0.98 Gyr). With weights only inside
+``rmax = 300`` kpc, the BHB population, whose profile is shallow at large
+radii, instead loses 6% of its stars in the outer shell.
+
+Painted on the initial conditions, the populations relax with the halo during
+its first ~1 Gyr (3–4% fewer stars in the range), and then stay constant.
+Paint on a relaxed snapshot when this matters.
+
+Mock catalogues
+---------------
+
+`~stracers.TracerPopulation.draw_stars` gives the particle indices of a mock
+catalogue in memory; `stracers.write_catalogue` writes catalogues of up to
+~10\ :sup:`8` stars to HDF5 or CSV files (see :doc:`../io/index`).
+
 Other options
 =============
 

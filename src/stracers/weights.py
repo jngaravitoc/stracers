@@ -424,6 +424,7 @@ def compute_weights(
     n_fine=1000,
     boundary_term=True,
     truncation_correction=False,
+    beyond_rmax="zero",
     G=G_GADGET,
 ):
     """
@@ -492,6 +493,16 @@ def compute_weights(
         Subtract G M_tot / max(r) from the potential, as in the reference
         notebook. This is a constant shift of Phi and E; it only changes the
         weights through ``boundary_term``, which assumes Phi(infinity) = 0.
+    beyond_rmax : {"zero", "energy"}
+        Weights of the particles beyond ``rmax``. "zero" (default): they get
+        no weight. "energy": they get the weight of their energy bin, as the
+        particles inside ``rmax`` with the same energy (zero if their energy
+        is outside the energy grid). The weights, computed from the particles
+        inside ``rmax``, are then a function of energy only for every
+        particle, so the stellar halo is stationary in a static potential:
+        use it to follow the stars in time, when particles beyond ``rmax``
+        can orbit back inside. The normalisation (``stellar_mass``) still
+        refers to the particles inside ``rmax``.
     G : float
         Gravitational constant in the units of the inputs.
 
@@ -515,6 +526,8 @@ def compute_weights(
     mask = (r_all > 0) & (r_all < rmax)
     if not np.any(mask):
         raise ValueError("No particles with 0 < r < rmax")
+    if beyond_rmax not in ("zero", "energy"):
+        raise ValueError("beyond_rmax must be 'zero' or 'energy'")
     if r_trunc is not None and r_trunc > rmax:
         raise ValueError("r_trunc must not be larger than rmax")
     m_star = _stellar_mass_inside(
@@ -619,6 +632,17 @@ def compute_weights(
     weights = np.zeros(n_part)
     weights[mask] = w_part
     w_bins *= m_star / total
+    if beyond_rmax == "energy":
+        out = ~mask & (r_all > 0)
+        E_out = 0.5 * np.sum(vel[out] ** 2, axis=1) + pot[out]
+        j = np.digitize(E_out, E_edges) - 1
+        j[E_out == E_edges[-1]] = n_ebins - 1
+        valid = (j >= 0) & (j < n_ebins)
+        if r_trunc is not None:
+            valid &= E_out <= phi_t
+        w_out = np.zeros(len(E_out))
+        w_out[valid] = w_bins[j[valid]]
+        weights[out] = w_out
 
     return WeightsResult(
         weights=weights,

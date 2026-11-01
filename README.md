@@ -100,6 +100,16 @@ idx = pop.draw_stars(rng=0)             # mock catalogue: particle index of each
 Tracers: "RR Lyrae" ("RRLyr"), "BHB", "K giants" ("K-giant"), "M giants", "Giants", "MSTO",
 "F stars", "A-type stars".
 
+Paint once and observe later snapshots, and write mock catalogues (HDF5 or CSV, up to ~1e8 stars):
+
+```python
+pop = stracers.paint_tracer(pos, vel, pot, mass, "BHB", (20, 100), n_stars=3000, ids=ids)
+pop.save("bhb.h5")                                         # paint once ...
+later = stracers.load_population("bhb.h5").at_snapshot(ids_t, pos_t, vel_t, center=center_t)
+stracers.write_catalogue(later, "bhb_t.h5", rng=0)         # ... observe any snapshot
+cols, meta = stracers.read_catalogue("bhb_t.h5")
+```
+
 ## Counting stars
 
 `stracers.number_of_stars` gives the number of stars in a range of
@@ -173,6 +183,11 @@ make a release:
 ```bash
 pytest
 ```
+
+`tests/test_simulation.py` and `tutorials/simulation_tracers.ipynb` use a 10^6-particle sample of an
+isolated Milky Way simulation (not public). Make it with `python tests/make_sim_sample.py
+[snapshot_dir] [output]`; it is written to `$STRACERS_SIM_SAMPLE` (default
+`~/.cache/stracers/mw_iso_b1_1M.hdf5`), and the tests are skipped without it.
 
 The tests sample an isotropic Hernquist halo from its analytic distribution
 function. They check that:

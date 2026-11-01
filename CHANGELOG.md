@@ -24,6 +24,18 @@ change the API. Each release is tagged `vX.Y.Z` in git.
   the number of stars of the tracer on each particle; `TracerPopulation.velocity_profile` and
   `draw_stars` (mock catalogues). Tracer names such as "RRLyr", "BHB" and "K-giant" are matched
   flexibly (`available_tracers`, `tracer_fits`)
+- Following tracer populations through a simulation: `paint_tracer(..., ids=...)` and
+  `TracerPopulation.at_snapshot`, which carries the stars of each particle by ID to another snapshot
+  and selects the radial range again (stars are conserved, not renormalised); `TracerPopulation.save`
+  and `load_population` to paint once and observe snapshots separately; `mw.profile_from_params`
+- `compute_weights(..., beyond_rmax="energy")`: particles beyond `rmax` get the weight of their
+  energy, so that the stellar halo is stationary; the default in `paint_tracer`
+- Mock catalogues, `stracers.catalogue`: `write_catalogue` (HDF5 or CSV, one row per mock star or per
+  particle, written in chunks for catalogues of ~1e8 stars, reproducible for any chunk size) and
+  `read_catalogue`, with metadata; `TracerPopulation.catalogue` in memory
+- Tests on a 1M-particle sample of an isolated Milky Way simulation (`tests/make_sim_sample.py`,
+  `tests/test_simulation.py`, skipped without the data) and the tutorial
+  `tutorials/simulation_tracers.ipynb`
 - Units page in the documentation: consistent units, what assumes kpc, cosmological snapshots, the
   zero point of the potential, and two checks of the inputs
 

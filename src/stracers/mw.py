@@ -22,7 +22,7 @@ import numpy as np
 
 from .profiles import broken_power_law, power_law
 
-__all__ = ["load_table", "available", "get_entry", "reference_url", "mw_profile"]
+__all__ = ["load_table", "available", "get_entry", "reference_url", "mw_profile", "profile_from_params"]
 
 _DATA_FILE = "mw_stellar_halo_profiles.csv"
 _TEXT_COLUMNS = ("key", "model", "tracer", "reference", "note", "arxiv", "doi")
@@ -129,7 +129,33 @@ def mw_profile(key, r_core=1.0, smoothness=0.1, rng=None):
             value = _draw(value, entry[name + "_err_minus"], entry[name + "_err_plus"], rng)
         params[name] = value
 
-    if entry["model"] == "spl":
+    return profile_from_params(key, dict(params, r_core=r_core, smoothness=smoothness))
+
+
+def profile_from_params(key, params):
+    """
+    Rebuild the profile of fit ``key`` from its parameters, e.g. the
+    ``params`` attribute of a profile from :func:`mw_profile` (including
+    parameters drawn with ``rng``), as stored with a saved tracer population.
+
+    Parameters
+    ----------
+    key : str
+        Profile key (see :func:`available`).
+    params : dict
+        ``slope`` (simple power law) or ``r_break``, ``inner_slope`` and
+        ``outer_slope`` (broken power law), plus ``r_core`` and
+        ``smoothness``.
+
+    Returns
+    -------
+    nu : callable
+        nu(r), with attribute ``params``.
+    """
+    model = get_entry(key)["model"]
+    params = {k: float(v) for k, v in params.items()}
+    r_core, smoothness = params.get("r_core", 0.0), params.get("smoothness", 0.0)
+    if model == "spl":
 
         def nu(r):
             return power_law(r, params["slope"], r_core=r_core)

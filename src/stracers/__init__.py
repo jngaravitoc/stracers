@@ -21,7 +21,9 @@ from . import halos, kinematics, mw, tracers
 from . import nstars
 from .nstars import number_of_stars, number_of_stars_table
 from .kinematics import velocity_profile
-from .tracers import TracerPopulation, paint_tracer
+from .tracers import TracerPopulation, load_population, paint_tracer
+from . import catalogue
+from .catalogue import read_catalogue, write_catalogue
 
 __version__ = "0.2.1"
 
@@ -48,6 +50,10 @@ __all__ = [
     "tracers",
     "paint_tracer",
     "TracerPopulation",
+    "load_population",
+    "catalogue",
+    "write_catalogue",
+    "read_catalogue",
     "nstars",
     "number_of_stars",
     "number_of_stars_table",
