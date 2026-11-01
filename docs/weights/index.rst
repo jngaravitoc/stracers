@@ -159,12 +159,14 @@ Limits
   :math:`\approx r_{vir}`). Haloes that are merging or strongly perturbed are
   not in equilibrium.
 - **Isotropy.** :math:`f_* = f_*(E)` describes an isotropic tracer, and not
-  every :math:`\nu` has a non-negative isotropic DF in a given potential. An &
-  Evans (2006) showed that the inner slope of an isotropic tracer,
-  :math:`-d\ln\nu/d\ln r`, must be at least half that of the potential's
-  density cusp. A cored tracer (e.g. Plummer) in an NFW or Hernquist cusp
-  therefore gives :math:`f_* < 0` at the most bound energies; those weights are
-  set to zero, with a warning.
+  every :math:`\nu` has a non-negative isotropic DF in a given potential. In a
+  density cusp :math:`\rho \propto r^{-1}` (NFW or Hernquist),
+  :math:`\psi_0 - \psi \propto r` near the centre, and a tracer with an inner
+  slope :math:`\nu \propto r^{-\gamma_*}` has :math:`f_* \ge 0` only for
+  :math:`\gamma_* > 0` (Errani & Peñarrubia 2020, Appendix A). A cored tracer
+  (e.g. Plummer) in such a cusp therefore gives :math:`f_* < 0` at the most
+  bound energies; those weights are set to zero, with a warning. A shallow
+  cusp, such as :math:`\gamma_* = 0.1`, is enough.
 - **Equal-mass particles.** :math:`N(E)` is built from particle masses, and the
   weights assume all particles have the same mass.
 - **Resolution.** The profile can only be followed where there are enough
@@ -441,8 +443,9 @@ Troubleshooting
    A few negative bins at the most bound energies are normal: there are few
    particles there. Many negative bins mean the tracer has no isotropic DF in
    this potential, for example a cored profile in a cuspy halo (see
-   :ref:`weights-limits`). Use a cuspier tracer, or accept that the centre will
-   be under-populated.
+   :ref:`weights-limits`). Give the tracer a small inner slope (e.g.
+   :math:`\nu \propto r^{-0.1}`), or accept that the centre will be
+   under-populated.
 "psi(r) is not strictly decreasing"
    The averaged potential is noisy or the centre is wrong. Check ``center``,
    increase ``dlogr``, or use ``derivative="spline"``.
@@ -457,10 +460,11 @@ Troubleshooting
 References
 ==========
 
-- An, J. H. & Evans, N. W. 2006, ApJ, 642, 752
 - Binney, J. & Tremaine, S. 2008, *Galactic Dynamics*, 2nd ed., Princeton
   University Press
 - Bullock, J. S. & Johnston, K. V. 2005, ApJ, 635, 931
+- Errani, R. & Peñarrubia, J. 2020, MNRAS, 491, 4591,
+  `arXiv:1906.01642 <https://arxiv.org/abs/1906.01642>`_
 - Hernquist, L. 1990, ApJ, 356, 359
 - Laporte, C. F. P., White, S. D. M., Naab, T. & Gao, L. 2013, MNRAS, 435, 901,
   `arXiv:1301.5319 <https://arxiv.org/abs/1301.5319>`_
