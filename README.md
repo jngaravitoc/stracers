@@ -68,14 +68,16 @@ See [tutorials/hernquist_tracers.ipynb](tutorials/hernquist_tracers.ipynb).
 Available profiles: `plummer(a)`, `hernquist(a)`, `nfw(rs, rvir)`, and
 `einasto(n, r_eff)` (normalised to unit mass), and power laws with your own
 slopes and break radius: `power_law` / `"spl"`, `broken_power_law` / `"bpl"`
-and the smooth double power law `double_power_law` / `"dpl"`, all with an
+the smooth double power law `double_power_law` / `"dpl"`, and the power law with
+two breaks `triple_power_law` / `"tpl"`, all with an
 optional core radius. For example,
 `get_profile("dpl", r_break=20, inner_slope=-2.5, outer_slope=-4.5, alpha=2)`.
 `truncate(nu, r_t)` tapers any profile beyond `r_t`.
 
-`stracers.mw` provides the 31 Milky Way stellar halo profiles (simple and
-broken power laws) compiled in Medina et al. (2024, MNRAS 531, 4762, Table 6),
-stored in `src/stracers/data/mw_stellar_halo_profiles.csv`:
+`stracers.mw` provides 32 Milky Way stellar halo profiles, stored in
+`src/stracers/data/mw_stellar_halo_profiles.csv`: the 31 simple and broken power
+laws compiled in Medina et al. (2024, MNRAS 531, 4762, Table 6), and the power law
+with two breaks of Li et al. (2025, DESI DR2 K giants; `"li2025"`):
 
 ```python
 from stracers import mw

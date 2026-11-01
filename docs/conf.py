@@ -81,14 +81,19 @@ def _link(entry):
 
 
 with open(docs_root / "mw" / "spl.csv", "w", newline="") as f_spl, \
-        open(docs_root / "mw" / "bpl.csv", "w", newline="") as f_bpl:
-    spl, bpl = csv.writer(f_spl), csv.writer(f_bpl)
+        open(docs_root / "mw" / "bpl.csv", "w", newline="") as f_bpl, \
+        open(docs_root / "mw" / "tpl.csv", "w", newline="") as f_tpl:
+    spl, bpl, tpl = csv.writer(f_spl), csv.writer(f_bpl), csv.writer(f_tpl)
     for e in mw.load_table():
         if e["model"] == "spl":
             spl.writerow([e["key"], _fmt(e, "slope"), _range(e), e["tracer"], _link(e)])
-        else:
+        elif e["model"] == "bpl":
             bpl.writerow([e["key"], _fmt(e, "r_break"), _fmt(e, "inner_slope"),
                           _fmt(e, "outer_slope"), _range(e), e["tracer"], _link(e)])
+        else:
+            tpl.writerow([e["key"], _fmt(e, "r_break"), _fmt(e, "r_break2"), _fmt(e, "inner_slope"),
+                          _fmt(e, "middle_slope"), _fmt(e, "outer_slope"), _range(e), e["tracer"],
+                          _link(e)])
 
 # List of the references of the compilation, with their arXiv (or DOI) links
 _refs = {}

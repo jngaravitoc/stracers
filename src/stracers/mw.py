@@ -2,7 +2,8 @@
 Milky Way stellar halo density profiles from the literature.
 
 The profiles are the simple and broken power laws compiled in Table 6 of
-Medina et al. 2024, MNRAS, 531, 4762 (doi:10.1093/mnras/stae1137), stored in
+Medina et al. 2024, MNRAS, 531, 4762 (doi:10.1093/mnras/stae1137), and the
+doubly broken power law of Li et al. 2025 (arXiv:2512.01350), stored in
 ``stracers/data/mw_stellar_halo_profiles.csv``. They are spherical number
 density profiles of halo stars, fitted only over the radial range listed for
 each one (``r_min`` to ``r_max``).
@@ -21,13 +22,17 @@ from importlib import resources
 
 import numpy as np
 
-from .profiles import broken_power_law, power_law
+from .profiles import broken_power_law, power_law, triple_power_law
 
 __all__ = ["load_table", "available", "get_entry", "reference_url", "mw_profile", "profile_from_params"]
 
 _DATA_FILE = "mw_stellar_halo_profiles.csv"
 _TEXT_COLUMNS = ("key", "model", "tracer", "reference", "note", "arxiv", "doi")
-_PARAMETERS = {"spl": ("slope",), "bpl": ("r_break", "inner_slope", "outer_slope")}
+_PARAMETERS = {
+    "spl": ("slope",),
+    "bpl": ("r_break", "inner_slope", "outer_slope"),
+    "tpl": ("r_break", "r_break2", "inner_slope", "middle_slope", "outer_slope"),
+}
 
 
 def _parse(row):
@@ -59,7 +64,8 @@ def load_table():
 def available(model=None):
     """
     Keys of the available profiles, optionally only ``model`` = "spl"
-    (simple power law) or "bpl" (broken power law).
+    (simple power law), "bpl" (broken power law) or "tpl" (power law with
+    two breaks).
     """
     return [e["key"] for e in load_table() if model is None or e["model"] == model]
 
@@ -117,7 +123,7 @@ def mw_profile(key, r_core=1.0, smoothness=0.1, rng=None):
         -3 the mass inside a few ``r_core`` depends strongly on its value, so
         choose it deliberately.
     smoothness : float
-        Width (in dex) of the transition at the break of broken power laws.
+        Width (in dex) of the transition at the breaks of broken power laws.
         0 gives the sharp break of the published fits, which puts a narrow
         feature into f(E) that the energy binning cannot resolve (visible as
         a dip or excess near the break, large for steep outer slopes). The
@@ -127,7 +133,8 @@ def mw_profile(key, r_core=1.0, smoothness=0.1, rng=None):
         uncertainties, read as median and 16th/84th percentiles (two
         half-normals joined at the median). Parameters without uncertainties
         are kept fixed, and non-positive break radii are drawn again (this
-        matters for wide uncertainties, e.g. 26.5 +/- 8.9 kpc).
+        matters for wide uncertainties, e.g. 26.5 +/- 8.9 kpc), as are pairs
+        of break radii out of order.
 
     Returns
     -------
@@ -135,13 +142,16 @@ def mw_profile(key, r_core=1.0, smoothness=0.1, rng=None):
         nu(r), with attribute ``params`` holding the parameters used.
     """
     entry = get_entry(key)
-    params = {}
-    for name in _PARAMETERS[entry["model"]]:
-        value = entry[name]
-        if rng is not None:
-            value = _draw(value, entry[name + "_err_minus"], entry[name + "_err_plus"], rng,
-                          positive=(name == "r_break"))
-        params[name] = value
+    while True:
+        params = {}
+        for name in _PARAMETERS[entry["model"]]:
+            value = entry[name]
+            if rng is not None:
+                value = _draw(value, entry[name + "_err_minus"], entry[name + "_err_plus"], rng,
+                              positive=name.startswith("r_break"))
+            params[name] = value
+        if params.get("r_break", 0.0) < params.get("r_break2", np.inf):
+            break
 
     return profile_from_params(key, dict(params, r_core=r_core, smoothness=smoothness))
 
@@ -157,9 +167,10 @@ def profile_from_params(key, params):
     key : str
         Profile key (see :func:`available`).
     params : dict
-        ``slope`` (simple power law) or ``r_break``, ``inner_slope`` and
-        ``outer_slope`` (broken power law), plus ``r_core`` and
-        ``smoothness``.
+        ``slope`` (simple power law), ``r_break``, ``inner_slope`` and
+        ``outer_slope`` (broken power law), or ``r_break``, ``r_break2``,
+        ``inner_slope``, ``middle_slope`` and ``outer_slope`` (power law with
+        two breaks), plus ``r_core`` and ``smoothness``.
 
     Returns
     -------
@@ -173,6 +184,14 @@ def profile_from_params(key, params):
 
         def nu(r):
             return power_law(r, params["slope"], r_core=r_core)
+
+    elif model == "tpl":
+
+        def nu(r):
+            return triple_power_law(
+                r, params["r_break"], params["r_break2"], params["inner_slope"],
+                params["middle_slope"], params["outer_slope"], r_core=r_core, smoothness=smoothness,
+            )
 
     else:
 

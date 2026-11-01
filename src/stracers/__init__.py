@@ -6,6 +6,7 @@ following Laporte et al. (2013).
 from .profiles import (
     broken_power_law,
     double_power_law,
+    triple_power_law,
     einasto,
     get_profile,
     hernquist,
@@ -37,6 +38,7 @@ __all__ = [
     "power_law",
     "broken_power_law",
     "double_power_law",
+    "triple_power_law",
     "get_profile",
     "truncate",
     "mass_fraction_within",

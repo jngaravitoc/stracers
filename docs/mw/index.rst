@@ -9,7 +9,8 @@ Introduction
 
 `stracers.mw` provides the 31 simple and broken power-law fits to the number
 density of the Milky Way stellar halo compiled by Medina et al. (2024, MNRAS,
-531, 4762, Table 6). The data are in
+531, 4762, Table 6), and the power law with two breaks fitted by Li et al.
+(2025) to DESI DR2 K giants, 32 profiles in all. The data are in
 ``src/stracers/data/mw_stellar_halo_profiles.csv``, with the uncertainties,
 the radial range of each fit, the tracer and the reference.
 
@@ -35,6 +36,17 @@ Broken power laws (``"bpl"``), with slope :math:`\gamma_{in}` inside
 .. csv-table::
    :file: bpl.csv
    :header: "Key", ":math:`r_{break}`", ":math:`\gamma_{in}`", ":math:`\gamma_{out}`", "Range", "Tracer", "Reference"
+   :widths: auto
+   :class: mw-table
+
+A power law with two breaks (``"tpl"``), with slope :math:`\gamma_{in}`
+inside :math:`r_{break}`, :math:`\gamma_{mid}` between the breaks and
+:math:`\gamma_{out}` outside :math:`r_{break,2}`. It is from Li et al. (2025,
+Table 1, whole halo), not from the compilation:
+
+.. csv-table::
+   :file: tpl.csv
+   :header: "Key", ":math:`r_{break}`", ":math:`r_{break,2}`", ":math:`\gamma_{in}`", ":math:`\gamma_{mid}`", ":math:`\gamma_{out}`", "Range", "Tracer", "Reference"
    :widths: auto
    :class: mw-table
 
@@ -101,8 +113,8 @@ one row of the table::
 
     >>> import numpy as np
     >>> from stracers import mw
-    >>> len(mw.available()), len(mw.available("spl")), len(mw.available("bpl"))
-    (31, 16, 15)
+    >>> len(mw.available()), len(mw.available("spl")), len(mw.available("bpl")), len(mw.available("tpl"))
+    (32, 16, 15, 1)
     >>> e = mw.get_entry("medina2024")
     >>> e["r_break"], e["inner_slope"], e["outer_slope"], e["tracer"]
     (18.1, -2.05, -4.47, 'RRLs')
@@ -129,7 +141,7 @@ Core and break
   and an excess of up to 2× for the −15 outer slope of Fukushima et al.
   (2019). ``smoothness=0`` gives the published form.
 
-With these defaults, all 31 profiles are recovered to within 5% over their
+With these defaults, all 32 profiles are recovered to within 5% over their
 fitted ranges by `~stracers.compute_weights` in the test halo.
 
 Uncertainties
@@ -149,7 +161,7 @@ compilation::
 Total mass
 ----------
 
-23 of the 31 profiles have a finite total mass and can be used with
+24 of the 32 profiles have a finite total mass and can be used with
 ``within="total"`` in `~stracers.compute_weights`. The other eight have outer
 slopes of −3 or shallower (``wetterer1996``, ``vivas2006``, ``bell2008``,
 ``depropris2010``, ``deason2011_spl``, ``sesar2013``, ``iorio2018``,
@@ -161,14 +173,16 @@ Caveats
 =======
 
 - The fits are **spherical**, while several of the papers fit flattened haloes;
-  only the radial profile is kept.
+  only the radial profile is kept. For Li et al. (2025), a triaxial halo
+  (axis ratios 1 : 0.85 : 0.74, tilted by 44° from the disc), the radius of the
+  profile is the ellipsoidal radius.
 - Each fit is only valid over its range (mostly ~5–100 kpc). Outside it the
   power laws are extrapolations.
 
 References
 ==========
 
-The compilation is from
+The compilation (all but ``li2025``) is from
 
 - Medina, G. E., et al. 2024, MNRAS, 531, 4762,
   `arXiv:2402.14055 <https://arxiv.org/abs/2402.14055>`__,

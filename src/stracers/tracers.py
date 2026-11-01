@@ -94,9 +94,9 @@ def _year(entry):
 
 
 def _rank(entry):
-    """Newest first, then broken over simple power laws, then the widest range."""
+    """Newest first, then broken (one or two breaks) over simple power laws, then the widest range."""
     r_lo = entry["r_min"] if entry["r_min"] else 1e-3
-    return (_year(entry), entry["model"] == "bpl", np.log(entry["r_max"] / r_lo))
+    return (_year(entry), entry["model"] != "spl", np.log(entry["r_max"] / r_lo))
 
 
 def choose_fit(tracer, r_range):
@@ -105,7 +105,8 @@ def choose_fit(tracer, r_range):
 
     The fit is the most recent whose fitted range covers ``r_range`` (fits
     quoted only with an outer radius, "<X kpc", count as starting at 0);
-    ties go to broken over simple power laws, then to the widest fitted range.
+    ties go to broken (one or two breaks) over simple power laws, then to the
+    widest fitted range.
     If no fit covers the range, the one covering the largest part of it (in
     log r) is chosen, with a warning: part of the range then uses an
     extrapolated profile.

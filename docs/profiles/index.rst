@@ -25,6 +25,11 @@ Name                      Function                                     Parameter
 ``"dpl"``                 `~stracers.double_power_law`                 ``r_break``, ``inner_slope``,
                                                                        ``outer_slope``, ``alpha``,
                                                                        ``r_core``
+``"tpl"``                 `~stracers.triple_power_law`                 ``r_break``, ``r_break2``,
+                                                                       ``inner_slope``,
+                                                                       ``middle_slope``,
+                                                                       ``outer_slope``, ``r_core``,
+                                                                       ``smoothness``
 ========================  ===========================================  ==================================
 
 `~stracers.get_profile` binds a profile to its parameters::
@@ -87,6 +92,16 @@ DPL with :math:`\alpha = 1/\mathrm{smoothness}`::
     >>> ratio = dpl / stracers.hernquist(r, 2.0)
     >>> bool(np.allclose(ratio, ratio[0]))   # proportional to the Hernquist profile
     True
+
+The triple power law (TPL) has two breaks, with slopes
+:math:`\gamma_{in}`, :math:`\gamma_{mid}` and :math:`\gamma_{out}` inside
+``r_break``, between the breaks, and outside ``r_break2``. As for the BPL,
+``smoothness`` > 0 smooths both breaks::
+
+    >>> tpl = stracers.get_profile("tpl", r_break=16.0, r_break2=76.3, inner_slope=-1.5,
+    ...                            middle_slope=-3.45, outer_slope=-5.2)
+    >>> print(np.round(np.log(tpl(40.0) / tpl(20.0)) / np.log(2), 2))   # middle slope
+    -3.45
 
 Two cautions:
 

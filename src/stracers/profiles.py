@@ -24,6 +24,7 @@ __all__ = [
     "power_law",
     "broken_power_law",
     "double_power_law",
+    "triple_power_law",
     "get_profile",
     "truncate",
     "mass_fraction_within",
@@ -129,6 +130,43 @@ def double_power_law(r, r_break, inner_slope, outer_slope, alpha=1.0, r_core=0.0
     return np.exp(log_nu)
 
 
+def triple_power_law(r, r_break, r_break2, inner_slope, middle_slope, outer_slope,
+                     r_core=0.0, smoothness=0.0):
+    """
+    Power law with two breaks: slope ``inner_slope`` inside ``r_break``,
+    ``middle_slope`` between ``r_break`` and ``r_break2``, and ``outer_slope``
+    outside ``r_break2`` (``r_break`` < ``r_break2``), normalised to
+    nu(r_break) = 1.
+
+    With r_s = sqrt(r^2 + r_core^2):
+
+    - ``smoothness`` = 0: continuous power laws with kinks at the breaks;
+    - ``smoothness`` = s > 0: each break turns over smoothly over ~s dex, as
+      in :func:`broken_power_law` (a product of two :func:`double_power_law`
+      transitions with alpha = 1/s).
+
+    ``r_core`` > 0 flattens the profile inside ``r_core``.
+    """
+    if not r_break < r_break2:
+        raise ValueError("r_break must be smaller than r_break2")
+    r = np.asarray(r, dtype=float)
+    if smoothness > 0:
+        alpha = 1.0 / smoothness
+        # the second transition, normalised to 1 at r_break
+        x_b = np.log(r_break / r_break2)
+        with np.errstate(divide="ignore"):
+            lx2 = np.log(np.sqrt(r**2 + r_core**2) / r_break2)
+        log_second = (outer_slope - middle_slope) / alpha * (
+            np.logaddexp(0.0, alpha * lx2) - np.logaddexp(0.0, alpha * x_b))
+        return double_power_law(r, r_break, inner_slope, middle_slope, alpha=alpha,
+                                r_core=r_core) * np.exp(log_second)
+    x = np.sqrt(r**2 + r_core**2) / r_break
+    x2 = r_break2 / r_break
+    return np.where(x < 1.0, x**inner_slope,
+                    np.where(x < x2, x**middle_slope,
+                             x2**middle_slope * (x / x2) ** outer_slope))
+
+
 _PROFILES = {
     "plummer": plummer,
     "hernquist": hernquist,
@@ -137,10 +175,12 @@ _PROFILES = {
     "power_law": power_law,
     "broken_power_law": broken_power_law,
     "double_power_law": double_power_law,
+    "triple_power_law": triple_power_law,
     # short names
     "spl": power_law,
     "bpl": broken_power_law,
     "dpl": double_power_law,
+    "tpl": triple_power_law,
 }
 
 

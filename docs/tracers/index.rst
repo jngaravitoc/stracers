@@ -53,7 +53,7 @@ Choosing the fit
 
 Most tracers have several published fits. By default
 `~stracers.tracers.choose_fit` takes the **most recent fit whose fitted range
-covers the requested range**. Ties go to broken over simple power laws, then
+covers the requested range**. Ties go to broken (one or two breaks) over simple power laws, then
 to the widest fitted range. If no fit covers the range, the one covering the
 largest part of it is used, with a warning that the rest of the range uses the
 extrapolated profile::
@@ -63,8 +63,10 @@ extrapolated profile::
     'medina2024'
     >>> choose_fit("BHB", (20, 100))        # the only BHB fit covering 20-100 kpc
     'thomas2018'
-    >>> choose_fit("K-giant", (20, 100))    # warns: no K-giant fit reaches 100 kpc
-    'xue2015_bpl'
+    >>> choose_fit("K-giant", (20, 100))    # Li+2025 (8-200 kpc), two breaks
+    'li2025'
+    >>> choose_fit("M giants", (20, 100))   # warns: the only M-giant fit stops at 90 kpc
+    'lopezcorredoira2024_m'
 
 Pass ``key`` to `~stracers.paint_tracer` to use a specific fit instead.
 

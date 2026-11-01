@@ -10,6 +10,14 @@ change the API. Each release is tagged `vX.Y.Z` in git.
 - `tests/test_npaint.py`: the weights compared with the method of npaint (Errani & Peñarrubia
   2020), an independent re-implementation with analytic distribution functions for its default
   Hernquist halo and tracer; shell masses agree within 2%, velocity dispersions within 0.3%
+- `triple_power_law` (`"tpl"` in `get_profile`): a power law with two breaks, sharp or smoothed
+- Milky Way profile `"li2025"`: the doubly broken power law of Li et al. 2025 (arXiv:2512.01350,
+  Table 1, whole halo) fitted to DESI DR2 K giants at 8-200 kpc (breaks at 16.0 and 76.3 kpc,
+  slopes -1.50, -3.45 and -5.20); new `r_break2` and `middle_slope` columns in the data file
+
+### Changed
+- `choose_fit` now picks `"li2025"` for K giants in ranges within 8-200 kpc (it previously
+  picked `"xue2015_bpl"`, with a warning beyond 80 kpc)
 
 ### Fixed
 - The weights page attributed to An & Evans (2006) a minimum inner slope for isotropic tracers

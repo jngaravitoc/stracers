@@ -19,7 +19,7 @@ where :math:`n` is the number density at the ellipsoidal radius
 :math:`r_q = \sqrt{R^2 + z^2/q^2}` and :math:`q` the flattening of the halo
 (:math:`q < 1` is oblate). `~stracers.number_of_stars` takes any profile, or
 the key of a profile in :doc:`../mw/index`, and `~stracers.number_of_stars_table`
-runs it for all 31 Milky Way profiles. This is the calculation of Medina et
+runs it for all 32 Milky Way profiles. This is the calculation of Medina et
 al. (2024, Sect. 5.2.1 and Fig. 7) for the number of RR Lyrae beyond a given
 radius.
 

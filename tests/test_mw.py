@@ -4,19 +4,23 @@ import numpy as np
 import pytest
 
 from conftest import weighted_density
-from stracers import broken_power_law, compute_weights, mw, power_law
+from stracers import broken_power_law, compute_weights, mw, power_law, triple_power_law
 
 
 def test_table_contents():
     table = mw.load_table()
-    assert len(table) == 31
+    assert len(table) == 32
     keys = [e["key"] for e in table]
     assert len(set(keys)) == len(keys)
     assert len(mw.available("spl")) == 16
     assert len(mw.available("bpl")) == 15
+    assert mw.available("tpl") == ["li2025"]
     for e in table:
         if e["model"] == "spl":
             assert e["slope"] is not None
+        elif e["model"] == "tpl":
+            assert None not in (e["r_break"], e["r_break2"], e["inner_slope"], e["middle_slope"],
+                                e["outer_slope"])
         else:
             assert None not in (e["r_break"], e["inner_slope"], e["outer_slope"])
         assert e["r_max"] is not None and e["reference"]
@@ -30,6 +34,25 @@ def test_medina2024_entry():
     assert (e["r_min"], e["r_max"]) == (7.0, 145.0)
     with pytest.raises(ValueError):
         mw.get_entry("nonexistent2099")
+
+
+def test_li2025_entry():
+    """Li et al. 2025, Table 1, whole halo."""
+    e = mw.get_entry("li2025")
+    assert (e["r_break"], e["r_break2"]) == (16.0, 76.3)
+    assert (e["r_break_err_minus"], e["r_break_err_plus"]) == (0.2, 0.25)
+    assert (e["r_break2_err_minus"], e["r_break2_err_plus"]) == (1.94, 2.37)
+    assert (e["inner_slope"], e["middle_slope"], e["outer_slope"]) == (-1.5, -3.45, -5.2)
+    assert (e["r_min"], e["r_max"], e["tracer"]) == (8.0, 200.0, "K giants")
+    assert mw.reference_url("li2025") == "https://arxiv.org/abs/2512.01350"
+    nu = mw.mw_profile("li2025", r_core=0.0, smoothness=0.0)
+    r = np.array([10.0, 12.0, 30.0, 40.0, 100.0, 120.0])
+    assert np.allclose(np.diff(np.log(nu(r)))[::2] / np.diff(np.log(r))[::2], [-1.5, -3.45, -5.2])
+    # drawn parameters keep the breaks in order
+    rng = np.random.default_rng(3)
+    for _ in range(200):
+        p = mw.mw_profile("li2025", rng=rng).params
+        assert 0 < p["r_break"] < p["r_break2"]
 
 
 def test_power_law_slopes():
@@ -49,6 +72,24 @@ def test_broken_power_law(smoothness):
     assert broken_power_law(20.0, 20.0, -2.0, -4.5) == 1.0
 
 
+@pytest.mark.parametrize("smoothness", [0.0, 0.1])
+def test_triple_power_law(smoothness):
+    def slope(r):
+        nu = triple_power_law(r, 10.0, 100.0, -1.5, -3.5, -5.0, smoothness=smoothness)
+        return np.gradient(np.log(nu), np.log(r))[1]
+
+    assert slope(np.array([0.1, 0.11, 0.12])) == pytest.approx(-1.5, abs=1e-3)
+    assert slope(np.array([30.0, 31.0, 32.0])) == pytest.approx(-3.5, abs=1e-2)
+    assert slope(np.array([1e4, 1.1e4, 1.2e4])) == pytest.approx(-5.0, abs=1e-3)
+    assert triple_power_law(10.0, 10.0, 100.0, -1.5, -3.5, -5.0, smoothness=smoothness) == pytest.approx(1.0)
+    # continuous at the second break
+    r = 100.0 * np.array([1 - 1e-9, 1 + 1e-9])
+    nu = triple_power_law(r, 10.0, 100.0, -1.5, -3.5, -5.0, smoothness=smoothness)
+    assert nu[0] == pytest.approx(nu[1], rel=1e-6)
+    with pytest.raises(ValueError):
+        triple_power_law(1.0, 100.0, 10.0, -1.5, -3.5, -5.0)
+
+
 def test_mw_profile_parameters_and_sampling():
     nu = mw.mw_profile("medina2024")
     assert nu.params["r_break"] == 18.1
@@ -66,7 +107,7 @@ def test_mw_profile_parameters_and_sampling():
     assert a == b
 
 
-@pytest.mark.parametrize("key", ["medina2024", "feng2024", "fukushima2019"])
+@pytest.mark.parametrize("key", ["medina2024", "feng2024", "fukushima2019", "li2025"])
 def test_mw_profile_recovered(hernquist_halo, key):
     halo = hernquist_halo
     nu = mw.mw_profile(key)

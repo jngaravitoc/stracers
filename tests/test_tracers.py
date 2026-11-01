@@ -22,7 +22,8 @@ def test_tracer_names():
     assert rrl == tracer_fits("rr lyrae") == tracer_fits("RRLs")
     assert {mw.get_entry(k)["tracer"] for k in rrl} == {"RRLs", "RRab"} and len(rrl) == 15
     assert tracer_fits("K-giant") == tracer_fits("k giants") == tracer_fits("KGiants")
-    assert set(tracer_fits("K-giant")) == {"xue2015_spl", "xue2015_bpl", "lopezcorredoira2024_k"}
+    assert set(tracer_fits("K-giant")) == {"xue2015_spl", "xue2015_bpl", "lopezcorredoira2024_k",
+                                            "li2025"}
     assert len(tracer_fits("BHB")) == 7
     assert set(available_tracers()) >= {"RR Lyrae", "BHB", "K giants", "M giants", "MSTO"}
     with pytest.raises(ValueError, match="Unknown tracer"):
@@ -34,9 +35,12 @@ def test_choose_fit():
     assert choose_fit("RRLyr", (20, 100)) == "medina2024"   # feng2024 is also 2024 but an SPL
     assert choose_fit("BHB", (20, 100)) == "thomas2018"     # the only BHB fit covering 20-100 kpc
     assert choose_fit("RRLyr", (150, 250)) == "feng2024"    # medina2024 stops at 145 kpc
-    # no K-giant fit reaches 100 kpc: the largest overlap is chosen, with a warning
+    assert choose_fit("K-giant", (20, 100)) == "li2025"     # two breaks, 8-200 kpc
+    # no M-giant fit reaches 100 kpc: the largest overlap is chosen, with a warning
+    with pytest.warns(RuntimeWarning, match="No M giants fit covers"):
+        assert choose_fit("M giants", (20, 100)) == "lopezcorredoira2024_m"
     with pytest.warns(RuntimeWarning, match="No K giants fit covers"):
-        assert choose_fit("K-giant", (20, 100)) == "xue2015_bpl"
+        assert choose_fit("K-giant", (20, 300)) == "li2025"
     with pytest.raises(ValueError):
         choose_fit("BHB", (100, 20))
 
