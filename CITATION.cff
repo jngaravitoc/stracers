@@ -1,0 +1,98 @@
+cff-version: 1.2.0
+message: >-
+  If you use stracers, please cite Laporte et al. (2013), who introduced the
+  particle-tagging method, and Garavito-Camargo et al. (2019), who applied it to
+  the stellar halo of the Milky Way. You can also cite the software itself.
+type: software
+title: "stracers: stellar tracers in N-body simulations"
+abstract: >-
+  stracers paints stellar haloes onto the dark matter particles of N-body
+  simulations with the particle-tagging scheme of Laporte et al. (2013), and
+  makes mock tracer populations, kinematics and catalogues from them.
+authors:
+  - family-names: Garavito-Camargo
+    given-names: Nicolas
+  - family-names: Laporte
+    given-names: Chervin F. P.
+version: 0.2.1
+date-released: 2026-10-31
+license: MIT
+repository-code: "https://github.com/jngaravitoc/stracers"
+url: "https://jngaravitoc.github.io/stracers/"
+keywords:
+  - astronomy
+  - N-body simulations
+  - stellar halo
+  - Milky Way
+  - particle tagging
+preferred-citation:
+  type: article
+  title: "The growth in size and mass of cluster galaxies since z = 2"
+  authors:
+    - family-names: Laporte
+      given-names: Chervin F. P.
+    - family-names: White
+      given-names: Simon D. M.
+    - family-names: Naab
+      given-names: Thorsten
+    - family-names: Gao
+      given-names: Liang
+  journal: "Monthly Notices of the Royal Astronomical Society"
+  volume: 435
+  issue: 2
+  start: 901
+  end: 909
+  year: 2013
+  doi: "10.1093/mnras/stt912"
+  identifiers:
+    - type: other
+      value: "arXiv:1301.5319"
+      description: arXiv preprint
+references:
+  - type: article
+    title: "The growth in size and mass of cluster galaxies since z = 2"
+    authors:
+      - family-names: Laporte
+        given-names: Chervin F. P.
+      - family-names: White
+        given-names: Simon D. M.
+      - family-names: Naab
+        given-names: Thorsten
+      - family-names: Gao
+        given-names: Liang
+    journal: "Monthly Notices of the Royal Astronomical Society"
+    volume: 435
+    issue: 2
+    start: 901
+    end: 909
+    year: 2013
+    doi: "10.1093/mnras/stt912"
+    identifiers:
+      - type: other
+        value: "arXiv:1301.5319"
+        description: arXiv preprint
+  - type: article
+    title: "Hunting for the Dark Matter Wake Induced by the Large Magellanic Cloud"
+    authors:
+      - family-names: Garavito-Camargo
+        given-names: Nicolas
+      - family-names: Besla
+        given-names: Gurtina
+      - family-names: Laporte
+        given-names: Chervin F. P.
+      - family-names: Johnston
+        given-names: Kathryn V.
+      - family-names: Gómez
+        given-names: Facundo A.
+      - family-names: Watkins
+        given-names: Laura L.
+    journal: "The Astrophysical Journal"
+    volume: 884
+    issue: 1
+    start: 51
+    year: 2019
+    doi: "10.3847/1538-4357/ab32eb"
+    identifiers:
+      - type: other
+        value: "arXiv:1902.05089"
+        description: arXiv preprint
