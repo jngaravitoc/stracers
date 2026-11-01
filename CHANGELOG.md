@@ -7,6 +7,14 @@ change the API. Each release is tagged `vX.Y.Z` in git.
 ## [Unreleased]
 ### Added
 - `CONTRIBUTING.md`: development setup, workflow, tests, documentation and release steps
+- `tests/test_npaint.py`: the weights compared with the method of npaint (Errani & Peñarrubia
+  2020), an independent re-implementation with analytic distribution functions for its default
+  Hernquist halo and tracer; shell masses agree within 2%, velocity dispersions within 0.3%
+
+### Fixed
+- The weights page attributed to An & Evans (2006) a minimum inner slope for isotropic tracers
+  (half the cusp slope of the potential); that relation is about anisotropy. In a cuspy halo, a
+  non-negative isotropic DF near the centre only needs a non-zero inner slope; a core gives f < 0
 
 ## [0.3.0] - 2026-11-01
 ### Added
