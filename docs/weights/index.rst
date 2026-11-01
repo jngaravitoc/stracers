@@ -337,7 +337,10 @@ is listed in the API below.
 5. **Energy grid.** One linear grid of ``n_ebins`` bins spans the energies of
    the selected particles, with an extra edge at :math:`E = 0` and, with
    ``r_trunc``, at :math:`\Phi(r_t)`, so that no bin mixes bound and unbound
-   particles, or particles on both sides of the cut. :math:`N(E)`,
+   particles, or particles on both sides of the cut (`energy_grid`; a cut very
+   close to an existing edge moves that edge, rather than making a tiny bin).
+   A particle exactly on an edge belongs to the bin below it (`energy_bins`),
+   so particles with :math:`E = \Phi(r_t)` keep their stars. :math:`N(E)`,
    :math:`g(E)` and :math:`f_*(E)` are evaluated at the same bin centres;
    :math:`N(E)` is the particle mass in each bin divided by the bin width.
    Unbound particles (:math:`E \ge 0`) carry no stars.
@@ -478,6 +481,8 @@ Algorithm steps
 .. autofunction:: stracers.weights.radial_potential
 .. autofunction:: stracers.weights.smooth_potential
 .. autofunction:: stracers.weights.tracer_derivatives
+.. autofunction:: stracers.weights.energy_grid
+.. autofunction:: stracers.weights.energy_bins
 .. autofunction:: stracers.weights.density_of_states
 .. autofunction:: stracers.weights.eddington
 .. autofunction:: stracers.weights.outer_eddington

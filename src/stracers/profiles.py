@@ -122,7 +122,9 @@ def double_power_law(r, r_break, inner_slope, outer_slope, alpha=1.0, r_core=0.0
     # even where the density itself is representable
     with np.errstate(divide="ignore"):
         lx = np.log(np.sqrt(r**2 + r_core**2) / r_break)
-    log_nu = inner_slope * lx + (outer_slope - inner_slope) / alpha * (
+    # a flat inner slope contributes nothing, also at r = 0 (0 * -inf is NaN)
+    inner = inner_slope * lx if inner_slope != 0 else 0.0
+    log_nu = inner + (outer_slope - inner_slope) / alpha * (
         np.logaddexp(0.0, alpha * lx) - np.log(2.0))
     return np.exp(log_nu)
 
