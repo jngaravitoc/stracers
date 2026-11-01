@@ -228,6 +228,9 @@ def outer_eddington(epsilon, psi_min, nu_min, dnu_dpsi_min):
     eps = np.asarray(epsilon, dtype=float)
     out = np.zeros_like(eps)
     pos = eps > 0
+    if nu_min <= 0:
+        # the profile vanishes at psi_min (e.g. sharply tapered): nothing beyond
+        return out
     k = dnu_dpsi_min * psi_min / nu_min
     if k > 1:
         e = eps[pos]

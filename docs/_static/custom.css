@@ -1,0 +1,40 @@
+/* Green colour scheme for pydata-sphinx-theme (replaces the default teal
+   primary and purple secondary/accent colours). */
+
+html[data-theme="light"] {
+  --pst-color-primary: #2e7d32;
+  --pst-color-primary-text: #fff;
+  --pst-color-primary-highlight: #1b5e20;
+  --pst-color-primary-bg: #dcedc8;
+  --pst-color-secondary: #00796b;
+  --pst-color-secondary-text: #fff;
+  --pst-color-secondary-highlight: #004d40;
+  --pst-color-secondary-bg: #c8e6c9;
+  --pst-color-accent: #558b2f;
+  --pst-color-accent-bg: #f1f8e9;
+  --pst-color-link-higher-contrast: #1b5e20;
+  --pst-color-inline-code: #2e6b30;
+}
+
+html[data-theme="dark"] {
+  --pst-color-primary: #66bb6a;
+  --pst-color-primary-text: #14181e;
+  --pst-color-primary-highlight: #81c784;
+  --pst-color-primary-bg: #1b3a1d;
+  --pst-color-secondary: #4db6ac;
+  --pst-color-secondary-text: #14181e;
+  --pst-color-secondary-highlight: #80cbc4;
+  --pst-color-secondary-bg: #12332f;
+  --pst-color-accent: #9ccc65;
+  --pst-color-accent-bg: #253318;
+  --pst-color-link-higher-contrast: #a5d6a7;
+  --pst-color-inline-code: #b9e4b0;
+}
+
+/* Compact table of the Milky Way profiles (docs/mw/index.rst) */
+table.mw-table {
+  font-size: 0.85rem;
+}
+table.mw-table td:not(:last-child) {
+  white-space: nowrap;
+}

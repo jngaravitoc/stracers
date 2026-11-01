@@ -141,8 +141,8 @@ def get_profile(name, **params):
     """
     Return a callable ``nu(r)`` for a named profile.
 
-    Example
-    -------
+    Examples
+    --------
     >>> nu = get_profile("hernquist", a=2.0)
     """
     try:

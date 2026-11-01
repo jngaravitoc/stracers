@@ -1,12 +1,17 @@
-SPHINXOPTS    ?= -W
+# Minimal makefile for Sphinx documentation
+
+SPHINXOPTS    ?=
 SPHINXBUILD   ?= sphinx-build
 SOURCEDIR     = .
 BUILDDIR      = _build
 
-html:
-	$(SPHINXBUILD) -b html $(SPHINXOPTS) $(SOURCEDIR) $(BUILDDIR)/html
+help:
+	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 clean:
-	rm -rf $(BUILDDIR)
+	rm -rf $(BUILDDIR) api tutorials mw/spl.csv mw/bpl.csv
 
-.PHONY: html clean
+.PHONY: help clean Makefile
+
+%: Makefile
+	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
