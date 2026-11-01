@@ -85,11 +85,11 @@ with open(docs_root / "mw" / "spl.csv", "w", newline="") as f_spl, \
 # HTML
 html_theme = "pydata_sphinx_theme"
 html_title = f"stracers v{version}"
-html_baseurl = "https://jngaravitoc.github.io/tracers_triaxial/"
+html_baseurl = "https://jngaravitoc.github.io/stracers/"
 html_static_path = ["_static"]
 html_css_files = ["custom.css"]
 html_theme_options = {
-    "github_url": "https://github.com/jngaravitoc/tracers_triaxial",
+    "github_url": "https://github.com/jngaravitoc/stracers",
     "navbar_align": "left",
     "show_toc_level": 2,
 }

@@ -18,9 +18,9 @@ Way stellar halo density profiles compiled by Medina et al. (2024), and star
 counts for a halo or a survey.
 
 ``stracers`` is developed in a `public repository on GitHub
-<https://github.com/jngaravitoc/tracers_triaxial>`_. Bug reports and feature
+<https://github.com/jngaravitoc/stracers>`_. Bug reports and feature
 requests are welcome as `GitHub issues
-<https://github.com/jngaravitoc/tracers_triaxial/issues>`_.
+<https://github.com/jngaravitoc/stracers/issues>`_.
 
 .. toctree::
    :maxdepth: 1

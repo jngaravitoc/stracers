@@ -5,8 +5,8 @@ Installation
 ``stracers`` needs Python 3.9 or later, NumPy and SciPy. Install it from the
 GitHub repository::
 
-    git clone https://github.com/jngaravitoc/tracers_triaxial.git
-    cd tracers_triaxial
+    git clone https://github.com/jngaravitoc/stracers.git
+    cd stracers
     python -m pip install .
 
 Use ``python -m pip install -e .`` instead for an editable install, to work on

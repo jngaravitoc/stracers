@@ -114,7 +114,7 @@ kpc, km/s, Msun, potential in (km/s)², G = 4.30071e-6 kpc (km/s)² / Msun
 ## Documentation
 
 The documentation is in [docs/](docs/) and is published at
-<https://jngaravitoc.github.io/tracers_triaxial/>. It has installation
+<https://jngaravitoc.github.io/stracers/>. It has installation
 instructions, a getting-started guide, a tutorial, and a user guide with one
 page per module (the method, how the code works, and the API). To build it:
 

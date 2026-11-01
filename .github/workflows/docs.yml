@@ -1,5 +1,5 @@
 # Build the documentation (docs/) on every push and pull request, and publish
-# it with GitHub Pages at https://jngaravitoc.github.io/tracers_triaxial/ from
+# it with GitHub Pages at https://jngaravitoc.github.io/stracers/ from
 # master (named in the two `if:` lines below).
 # The tutorial notebook needs no simulation data and is run during the build.
 #
