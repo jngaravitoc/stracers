@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file. Versions fo
 change the API. Each release is tagged `vX.Y.Z` in git.
 
 ## [Unreleased]
+
+## [0.2.1] - 2026-10-31
 ### Fixed
 - With `derivative="spline"` (the default) the fine radial grid ran between the first and last bin
   centres, so the density of states missed the outer half of the last radial bin while N(E) counted

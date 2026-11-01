@@ -21,7 +21,7 @@ from . import halos, mw
 from . import nstars
 from .nstars import number_of_stars, number_of_stars_table
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
 __all__ = [
     "compute_weights",
