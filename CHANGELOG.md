@@ -6,6 +6,10 @@ change the API. Each release is tagged `vX.Y.Z` in git.
 
 ## [Unreleased]
 ### Added
+- `CITATION.cff` with Laporte et al. (2013) and Garavito-Camargo et al. (2019), and a "Citing"
+  section in the README
+- GitHub workflow running the tests on Python 3.9 with NumPy < 2 and Python 3.12 with NumPy >= 2
+- MIT license in the package metadata
 - `arxiv` and `doi` columns in the Milky Way profile data file (all 28 papers; DOIs only for the two
   not on arXiv) and `stracers.mw.reference_url`
 - `stracers.plotting.plot_mw_profiles`: the Milky Way profiles over their fitted ranges (solid) and

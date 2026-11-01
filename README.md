@@ -1,5 +1,8 @@
 # stracers
 
+[![Tests](https://github.com/jngaravitoc/stracers/actions/workflows/tests.yml/badge.svg)](https://github.com/jngaravitoc/stracers/actions/workflows/tests.yml)
+[![Documentation](https://github.com/jngaravitoc/stracers/actions/workflows/docs.yml/badge.svg)](https://jngaravitoc.github.io/stracers/)
+
 Paint stellar traicers in dark matter particles of an N-body halo,
 following the particle-tagging method of Laporte et al. (2013).
 
@@ -139,3 +142,13 @@ in one length unit. The docs use kpc, km/s, Msun and (km/s)²; the Milky Way
 profiles, star counts and some defaults (`rmax=300`) assume kpc. See the
 [Units](https://jngaravitoc.github.io/stracers/units.html) page for
 cosmological snapshots, N-body units, and two quick checks of the inputs.
+
+## Citing
+
+If you use `stracers`, please cite Laporte et al. (2013, MNRAS, 435, 901;
+[arXiv:1301.5319](https://arxiv.org/abs/1301.5319)), who introduced the
+particle-tagging method, and Garavito-Camargo et al. (2019, ApJ, 884, 51;
+[arXiv:1902.05089](https://arxiv.org/abs/1902.05089)). The metadata are in
+[CITATION.cff](CITATION.cff), and GitHub's "Cite this repository" button gives
+them as BibTeX or APA. If you use the Milky Way profiles, please also cite
+Medina et al. (2024) and the papers of the fits you use.
