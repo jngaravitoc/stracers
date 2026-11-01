@@ -18,6 +18,12 @@ change the API. Each release is tagged `vX.Y.Z` in git.
   `velocity_profile` (radial profiles of mean velocities, dispersions, anisotropy and effective
   number of particles), tested against the Jeans equation; a user-guide page and the tutorial
   `tutorials/tracer_kinematics.ipynb`
+- `stracers.tracers`: mock tracer populations. `paint_tracer(pos, vel, pot, mass, "BHB",
+  r_range=(20, 100), n_stars=...)` chooses the most recent literature fit for the tracer covering the
+  range (`choose_fit`), computes the weights of the whole stellar halo and selects the range, giving
+  the number of stars of the tracer on each particle; `TracerPopulation.velocity_profile` and
+  `draw_stars` (mock catalogues). Tracer names such as "RRLyr", "BHB" and "K-giant" are matched
+  flexibly (`available_tracers`, `tracer_fits`)
 - Units page in the documentation: consistent units, what assumes kpc, cosmological snapshots, the
   zero point of the potential, and two checks of the inputs
 

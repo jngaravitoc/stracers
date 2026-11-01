@@ -14,6 +14,7 @@ prepare the inputs from a simulation.
    weights/index
    profiles/index
    mw/index
+   tracers/index
    kinematics/index
    nstars/index
    io/index
