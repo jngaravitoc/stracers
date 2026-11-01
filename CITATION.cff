@@ -14,8 +14,8 @@ authors:
     given-names: Nicolas
   - family-names: Laporte
     given-names: Chervin F. P.
-version: 0.2.1
-date-released: 2026-10-31
+version: 0.3.0
+date-released: 2026-11-01
 license: MIT
 repository-code: "https://github.com/jngaravitoc/stracers"
 url: "https://jngaravitoc.github.io/stracers/"

@@ -25,7 +25,7 @@ from .tracers import TracerPopulation, load_population, paint_tracer
 from . import catalogue
 from .catalogue import read_catalogue, write_catalogue
 
-__version__ = "0.2.1"
+__version__ = "0.3.0"
 
 __all__ = [
     "compute_weights",
