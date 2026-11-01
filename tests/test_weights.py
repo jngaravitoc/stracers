@@ -6,7 +6,7 @@ from scipy.integrate import quad
 
 from conftest import G, hernquist_df, weighted_density
 from stracers import compute_weights, get_profile, truncate
-from stracers.weights import density_of_states
+from stracers.weights import density_of_states, eddington
 
 
 def run(halo, profile, **kwargs):
@@ -33,7 +33,9 @@ def test_eddington_recovers_hernquist_df(hernquist_halo):
     # power-law extrapolation beyond rmax
     inside = sel & (-res.E_centers > res.psi.min() + 0.05 * np.ptp(res.psi))
     assert np.max(np.abs(ratio[inside] - 1)) < 0.03
-    assert np.max(np.abs(ratio[sel & ~inside] - 1)) < 0.15
+    # the outermost bins rely on the power-law extension of nu(psi) beyond the
+    # grid; the most weakly bound one is ~17% off
+    assert np.max(np.abs(ratio[sel & ~inside] - 1)) < 0.2
 
 
 def test_self_consistent_weights_are_constant(hernquist_halo):
@@ -45,13 +47,15 @@ def test_self_consistent_weights_are_constant(hernquist_halo):
 
 
 def test_density_of_states_matches_analytic(hernquist_halo):
-    """g(E) of Laporte+13 eq. (3) for the Hernquist potential, truncated at
-    the outermost radial bin like the particle sample."""
+    """g(E) of Laporte+13 eq. (3) for the Hernquist potential, integrated out
+    to the outermost selected particle, i.e. over the same volume as the
+    particles counted in N(E) (not a boundary derived from the fine grid)."""
     halo = hernquist_halo
     M, a = halo["M"], halo["a"]
     res = run(halo, get_profile("hernquist", a=2.0))
-    r = res.r_bins
-    r_out = r[-1] * np.sqrt(r[-1] / r[-2])
+    r_part = np.linalg.norm(halo["pos"], axis=1)
+    r_out = r_part[res.mask].max()
+    assert res.r_range[1] == pytest.approx(r_out)
 
     def g_true(e):
         r_e = min(-G * M / e - a, r_out)
@@ -63,13 +67,40 @@ def test_density_of_states_matches_analytic(hernquist_halo):
     ratio = res.g_E[sel] / np.array([g_true(e) for e in res.E_centers[sel]])
     assert np.max(np.abs(ratio - 1)) < 0.03
 
-    # the inner sphere r < r_1 matters for the most bound energies
-    dr = r * np.log(r[1] / r[0])
+    # the inner sphere r < r_range[0] matters for the most bound energies
+    r = res.r_bins
+    dlnr = np.log(r[1] / r[0])
+    dr = r * (np.exp(dlnr / 2) - np.exp(-dlnr / 2))
     E_deep = res.E_centers[1:4]
     g_no_inner = density_of_states(E_deep, r, dr, -res.psi)
-    g_inner = density_of_states(E_deep, r, dr, -res.psi, r_in=r[0] - 0.5 * dr[0])
+    g_inner = density_of_states(E_deep, r, dr, -res.psi, r_in=res.r_range[0])
     truth = np.array([g_true(e) for e in E_deep])
     assert np.all(np.abs(g_inner / truth - 1) < np.abs(g_no_inner / truth - 1))
+
+
+def test_weakly_bound_weights_not_biased(hernquist_halo):
+    """Regression: the fine grid used to stop at the last coarse bin centre,
+    so g(E) missed the outer half of the last shell and the self-consistent
+    weights of the most weakly bound particles were ~30% too low."""
+    halo = hernquist_halo
+    res = run(halo, get_profile("hernquist", a=halo["a"]))
+    counts = np.histogram(particle_energy(halo)[res.mask], res.E_edges)[0]
+    w = res.w_bins[counts > 200]
+    w = w / np.median(w)
+    assert np.max(np.abs(w[-5:] - 1)) < 0.08
+
+
+def test_number_counts_and_density_of_states_same_volume(hernquist_halo):
+    """With sparse outer bins dropped, N(E) only counts the particles inside
+    the volume covered by g(E)."""
+    halo = hernquist_halo
+    res = run(halo, get_profile("hernquist", a=2.0), min_per_bin=5000)
+    r = np.linalg.norm(halo["pos"], axis=1)
+    r_hi = res.r_range[1]
+    assert r_hi < r[res.mask].max()  # some outer bins were dropped
+    counted = np.sum(res.N_E * np.diff(res.E_edges))
+    assert counted == pytest.approx(halo["mass"] * np.sum(res.mask & (r <= r_hi)))
+    assert np.all(np.isfinite(res.weights)) and np.all(res.weights >= 0)
 
 
 def test_energy_uses_particle_potential(hernquist_halo):
@@ -274,3 +305,70 @@ def test_profile_vanishing_at_rmax_no_warning(hernquist_halo):
         warnings.filterwarnings("ignore", message=".*f\\(E\\) < 0.*")
         res = compute_weights(halo["pos"], halo["vel"], halo["pot"], halo["mass"], nu_t)
     assert np.all(np.isfinite(res.weights))
+
+
+def test_gradient_mode_excludes_dropped_intermediate_shell(hernquist_halo):
+    """derivative="gradient": g(E) only covers the bins kept, so particles in
+    a dropped intermediate shell must not be counted in N(E). The spline grid
+    is continuous across the gap, so there they are counted."""
+    halo = hernquist_halo
+    r = np.linalg.norm(halo["pos"], axis=1)
+    keep = ~((r > 20.0) & (r < 32.0)) | (np.arange(len(r)) % 2000 == 0)  # empty a shell
+    sub = {k: (v[keep] if np.ndim(v) else v) for k, v in halo.items() if k != "ids"}
+    r_sub = r[keep]
+    nu = get_profile("hernquist", a=2.0)
+
+    res = run(sub, nu, derivative="gradient")
+    lo, hi = res.bin_edges[:, 0], res.bin_edges[:, 1]
+    gaps = lo[1:] > hi[:-1] * (1 + 1e-12)
+    assert np.any(gaps), "the test needs a dropped intermediate bin"
+    in_bins = np.zeros(len(r_sub), dtype=bool)
+    for a, b in res.bin_edges:
+        in_bins |= (r_sub >= a) & (r_sub <= b)
+    covered = res.mask & ((r_sub < res.r_range[0]) | in_bins)
+    counted = np.sum(res.N_E * np.diff(res.E_edges))
+    assert counted == pytest.approx(sub["mass"] * covered.sum())
+    assert covered.sum() < res.mask.sum()  # the shell's particles were left out
+
+    res = run(sub, nu, derivative="spline")
+    counted = np.sum(res.N_E * np.diff(res.E_edges))
+    assert counted == pytest.approx(sub["mass"] * np.sum(res.mask & (r_sub <= res.r_range[1])))
+
+
+def test_outer_slope_jump_is_accounted():
+    """The power-law extension with a slope different from the interior
+    derivative puts a jump in dnu/dpsi at psi_min; its contribution must be
+    included so that the DF does not depend on the slope chosen when nu(psi)
+    is an exact power law, and is consistent otherwise."""
+    k = 3.0
+    psi = np.linspace(1.0, 10.0, 4000)[::-1]           # decreasing with radius
+    nu = psi**k
+    dnu = k * psi ** (k - 1)
+    d2 = k * (k - 1) * psi ** (k - 2)
+    eps = np.array([0.5, 2.0, 5.0, 9.0])
+    f_local = eddington(eps, psi, d2, nu, dnu)
+    f_exact = eddington(eps, psi, d2, nu, dnu, outer_slope=k)
+    np.testing.assert_allclose(f_exact, f_local, rtol=1e-12)
+    # the analytic DF of nu = psi^k: k (k-1) B(k-1, 1/2) eps^(k-3/2) / (sqrt(8) pi^2)
+    from scipy.special import beta
+    f_true = k * (k - 1) * beta(k - 1, 0.5) * eps ** (k - 1.5) / (np.sqrt(8) * np.pi**2)
+    np.testing.assert_allclose(f_exact, f_true, rtol=1e-3)
+
+    # with a different extension slope, nu is continuous at psi_min and the
+    # jump term keeps the result equal to the DF of that piecewise profile:
+    # interior psi^k joined to (psi/psi_min)^k2 below psi_min
+    k2 = 4.0
+    f_jump = eddington(eps, psi, d2, nu, dnu, outer_slope=k2)
+    pm, num = psi[-1], nu[-1]
+    grid = np.linspace(1e-6, 10.0, 400001)
+    nu_pw = np.where(grid >= pm, grid**k, num * (grid / pm) ** k2)
+    d1_pw = np.gradient(nu_pw, grid)
+    # Eddington in the integrated-by-parts form avoids the delta function:
+    # f = d/deps [ int_0^eps dnu/dpsi / sqrt(eps - psi) dpsi ] / (sqrt(8) pi^2)
+    def inner(e):
+        g = grid[grid < e]
+        return np.trapz(np.interp(g, grid, d1_pw) / np.sqrt(e - g + 1e-300), g)
+    h = 1e-3
+    f_ref = np.array([(inner(e + h) - inner(e - h)) / (2 * h) for e in eps]) / (np.sqrt(8) * np.pi**2)
+    above = eps > pm
+    np.testing.assert_allclose(f_jump[above], f_ref[above], rtol=2e-2)

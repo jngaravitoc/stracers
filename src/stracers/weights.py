@@ -78,6 +78,13 @@ class WeightsResult:
     stellar_mass : float
         Stellar mass carried by the particles inside ``rmax``,
         ``sum(weights * mass)`` [Msun].
+    r_range : tuple of float
+        Radial range [kpc] covered by the radial bins kept, over which the
+        density of states is integrated (plus the sphere inside
+        ``r_range[0]``). N(E) counts the particles inside ``r_range[1]``,
+        except, with ``derivative="gradient"``, those in dropped bins.
+    bin_edges : ndarray, shape (n_kept, 2)
+        Inner and outer edges [kpc] of the radial bins kept.
     """
 
     weights: np.ndarray
@@ -97,6 +104,8 @@ class WeightsResult:
     w_bins: np.ndarray
     n_negative_f: int
     stellar_mass: float
+    r_range: tuple
+    bin_edges: np.ndarray
 
 
 def radial_potential(r, pot, rmin, rmax, dlogr, min_per_bin):
@@ -124,6 +133,10 @@ def radial_potential(r, pot, rmin, rmax, dlogr, min_per_bin):
         Mean potential in each bin.
     phi_err : ndarray
         Standard error of the mean potential.
+    bin_edges : ndarray, shape (n_kept, 2)
+        Inner and outer edges of each bin kept. The density of states must be
+        integrated over the same volume as the particles counted in N(E): the
+        sphere inside the first edge plus these shells.
     """
     log_min, log_max = np.log10(rmin), np.log10(rmax)
     n_bins = max(int(np.ceil((log_max - log_min) / dlogr)), 1)
@@ -146,10 +159,11 @@ def radial_potential(r, pot, rmin, rmax, dlogr, min_per_bin):
     phi = pot_sum[keep] / n
     var = np.clip(pot_sq[keep] / n - phi**2, 0, None)
     phi_err = np.sqrt(var / n)
-    return r_bins[keep], dr[keep], phi, phi_err
+    bin_edges = np.column_stack([10 ** log_edges[:-1], 10 ** log_edges[1:]])[keep]
+    return r_bins[keep], dr[keep], phi, phi_err, bin_edges
 
 
-def smooth_potential(r_bins, phi, phi_err, n_fine):
+def smooth_potential(r_bins, phi, phi_err, n_fine, r_range=None):
     """
     Smooth <Phi>(r) with a spline and resample it on a fine radial grid.
 
@@ -158,26 +172,40 @@ def smooth_potential(r_bins, phi, phi_err, n_fine):
     chi^2 of one per bin), so that it follows the potential within its
     statistical errors.
 
+    The fine grid is made of ``n_fine`` logarithmically spaced cells that
+    cover ``r_range`` exactly, with the radii at the cell centres (in log r)
+    and ``dr`` the cell widths. Passing the range of the ``bin_edges`` of
+    :func:`radial_potential`, ``(bin_edges[0, 0], bin_edges[-1, 1])``, keeps
+    the radial range of the coarse bins, half a bin beyond the first and last
+    bin centres, so that the density of states covers the same volume as the
+    particles in N(E). The spline is extrapolated over that half bin and
+    interpolates across any bin dropped in between.
+
     Parameters
     ----------
     r_bins, phi, phi_err : ndarray
         Output of :func:`radial_potential`.
     n_fine : int
-        Number of logarithmically spaced radii in the output grid.
+        Number of cells in the output grid.
+    r_range : tuple of float, optional
+        Radial range of the output grid, normally that of the ``bin_edges``
+        returned by :func:`radial_potential`. Defaults to the first and last
+        bin centres.
 
     Returns
     -------
     r, dr, phi : ndarray
-        Radii, bin widths (r dln r) and smoothed potential on the fine grid.
+        Radii, cell widths and smoothed potential on the fine grid.
     """
     lnr = np.log(r_bins)
     # floor the errors so that bins with ~exact potentials do not force interpolation
     err = np.maximum(phi_err, 1e-6 * np.abs(phi).max())
     spl = UnivariateSpline(lnr, phi, w=1.0 / err, k=4, s=len(lnr))
-    lnr_fine = np.linspace(lnr[0], lnr[-1], n_fine)
-    r_fine = np.exp(lnr_fine)
-    dlnr = lnr_fine[1] - lnr_fine[0]
-    return r_fine, r_fine * dlnr, spl(lnr_fine)
+    if r_range is None:
+        r_range = (r_bins[0], r_bins[-1])
+    ln_edges = np.linspace(np.log(r_range[0]), np.log(r_range[1]), n_fine + 1)
+    lnr_fine = 0.5 * (ln_edges[1:] + ln_edges[:-1])
+    return np.exp(lnr_fine), np.diff(np.exp(ln_edges)), spl(lnr_fine)
 
 
 def tracer_derivatives(nu, psi):
@@ -256,7 +284,7 @@ def outer_eddington(epsilon, psi_min, nu_min, dnu_dpsi_min):
     return out
 
 
-def eddington(epsilon, psi, d2nu_dpsi2, nu=None, dnu_dpsi=None):
+def eddington(epsilon, psi, d2nu_dpsi2, nu=None, dnu_dpsi=None, outer_slope=None):
     r"""
     Eddington inversion evaluated at the relative energies ``epsilon``.
 
@@ -287,6 +315,14 @@ def eddington(epsilon, psi, d2nu_dpsi2, nu=None, dnu_dpsi=None):
     nu, dnu_dpsi : ndarray, optional
         If both are given, the part of the integral at psi < psi_min is added
         with :func:`outer_eddington`.
+    outer_slope : float, optional
+        Logarithmic slope dln(nu)/dln(psi) used for that extension. Defaults
+        to the local derivative at psi_min, which is the least accurate value
+        on the grid; :func:`compute_weights` passes a secant slope over the
+        outermost radial bin instead. nu is then continuous at psi_min but
+        dnu/dpsi jumps by D = dnu/dpsi(psi_min) - outer_slope nu_min / psi_min,
+        and the term D / sqrt(epsilon - psi_min) that this jump contributes to
+        the Eddington integral, for epsilon > psi_min, is added.
 
     Returns
     -------
@@ -309,7 +345,13 @@ def eddington(epsilon, psi, d2nu_dpsi2, nu=None, dnu_dpsi=None):
     f = np.sum(np.where(active, kernel * d2_seg[None, :], 0.0), axis=1)
 
     if nu is not None and dnu_dpsi is not None:
-        f += outer_eddington(eps[:, 0], psi[0], nu[order][0], dnu_dpsi[order][0])
+        nu_min, dnu_min = nu[order][0], dnu_dpsi[order][0]
+        if outer_slope is not None:
+            dnu_out = outer_slope * nu_min / psi[0]
+            above = eps[:, 0] > psi[0]
+            f[above] += (dnu_min - dnu_out) / np.sqrt(eps[above, 0] - psi[0])
+            dnu_min = dnu_out
+        f += outer_eddington(eps[:, 0], psi[0], nu_min, dnu_min)
 
     return f / (np.sqrt(8.0) * np.pi**2)
 
@@ -485,11 +527,12 @@ def compute_weights(
     E = 0.5 * np.sum(vel[mask] ** 2, axis=1) + pot[mask]
 
     # Spherically averaged potential
-    r_bins, dr, phi, phi_err = radial_potential(
+    r_bins, dr, phi, phi_err, bin_edges = radial_potential(
         r, pot[mask], r.min(), r.max(), dlogr, min_per_bin
     )
+    r_lo, r_hi = bin_edges[0, 0], bin_edges[-1, 1]
     if derivative == "spline":
-        r_bins, dr, phi = smooth_potential(r_bins, phi, phi_err, n_fine)
+        r_bins, dr, phi = smooth_potential(r_bins, phi, phi_err, n_fine, r_range=(r_lo, r_hi))
     elif derivative != "gradient":
         raise ValueError("derivative must be 'gradient' or 'spline'")
     psi = -phi
@@ -510,10 +553,27 @@ def compute_weights(
     dE = np.diff(E_edges)
     e_idx = np.clip(np.digitize(E, E_edges) - 1, 0, n_ebins - 1)
 
-    N_E = np.bincount(e_idx, weights=m, minlength=n_ebins) / dE
-    g_E = density_of_states(E_centers, r_bins, dr, phi, r_in=r_bins[0] - 0.5 * dr[0])
+    # N(E) and g(E) over the same volume: g(E) covers the sphere inside r_lo
+    # plus the radial grid. The spline grid is continuous up to r_hi; the
+    # gradient grid only has the bins kept, so particles in a dropped
+    # intermediate shell are left out too. Particles left out of N(E) still
+    # get weights below.
+    if derivative == "spline":
+        in_volume = r <= r_hi
+    else:
+        j = np.searchsorted(bin_edges[:, 0], r, side="right") - 1
+        in_volume = (r < r_lo) | ((j >= 0) & (r <= bin_edges[np.maximum(j, 0), 1]))
+    N_E = np.bincount(e_idx[in_volume], weights=m[in_volume], minlength=n_ebins) / dE
+    g_E = density_of_states(E_centers, r_bins, dr, phi, r_in=r_lo)
     if boundary_term:
-        f_E = eddington(-E_centers, psi, d2nu_dpsi2, nu, dnu_dpsi)
+        # slope of nu(psi) for the extension beyond the grid: a secant over the
+        # outermost radial bin (dlogr), robust to the noise of a derivative at
+        # the end of the grid
+        i_in = min(np.searchsorted(r_bins, r_bins[-1] / 10**dlogr), len(r_bins) - 2)
+        with np.errstate(divide="ignore", invalid="ignore"):
+            k_out = np.log(nu[-1] / nu[i_in]) / np.log(psi[-1] / psi[i_in])
+        f_E = eddington(-E_centers, psi, d2nu_dpsi2, nu, dnu_dpsi,
+                        outer_slope=k_out if np.isfinite(k_out) else None)
     else:
         f_E = eddington(-E_centers, psi, d2nu_dpsi2)
 
@@ -576,4 +636,6 @@ def compute_weights(
         w_bins=w_bins,
         n_negative_f=n_negative,
         stellar_mass=m_star,
+        r_range=(r_lo, r_hi),
+        bin_edges=bin_edges,
     )
