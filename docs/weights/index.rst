@@ -263,6 +263,12 @@ Choosing the parameters
 ``boundary_term``
    Keep `True`. Turning it off reproduces the notebook, and makes the stellar
    density fall off too early near ``rmax``.
+``beyond_rmax``
+   ``"zero"`` (default): particles beyond ``rmax`` get no weight.
+   ``"energy"``: they get the weight of their energy, so that the stellar
+   halo is stationary and can be followed in time
+   (`~stracers.paint_tracer` uses it by default; see
+   :doc:`../tracers/index`).
 ``truncation_correction``
    Shifts the potential by :math:`-G M / r_{max}`, as in the original
    notebook. It is off by default (:math:`\Phi_0 = 0`, as in Laporte et al.).

@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from scipy.integrate import quad
 
-from stracers import compute_weights, mw, paint_tracer
+from stracers import compute_weights, load_population, mw, paint_tracer
 from stracers.kinematics import velocity_profile
 from stracers.tracers import available_tracers, choose_fit, tracer_fits
 
@@ -149,3 +149,72 @@ def test_normalisation_needs_tracer_stars(hernquist_halo):
     # without normalisation an empty range is allowed: it just has no stars
     pop = paint(sub, "RRLyr", (41, 49))
     assert pop.total == 0 and len(pop.draw_stars(rng=0)) == 0
+
+
+def test_at_snapshot_follows_ids(hernquist_halo):
+    """The stars follow their particles by ID; they are conserved, not
+    renormalised, and the radial selection is applied again."""
+    halo = hernquist_halo
+    ids = halo["ids"]
+    pop = paint(halo, "RRLyr", (20, 100), n_stars=3000, ids=ids, snapshot="000")
+    assert pop.matched_fraction == 1.0 and pop.snapshot == "000"
+
+    # a "later snapshot": the same particles in another order, moved
+    rng = np.random.default_rng(3)
+    order = rng.permutation(len(ids))
+    shift = np.array([5.0, -3.0, 1.0])
+    pos2 = halo["pos"][order] * 1.1 + shift            # all radii grow by 10%
+    later = pop.at_snapshot(ids[order], pos2, halo["vel"][order], center=shift, snapshot="010")
+
+    np.testing.assert_allclose(later.n_stars_all, pop.n_stars_all[order])
+    assert np.sum(later.n_stars_all) == pytest.approx(np.sum(pop.n_stars_all))   # conserved
+    r2 = np.linalg.norm(pos2 - shift, axis=1)
+    assert np.array_equal(later.in_range, (r2 >= 20) & (r2 <= 100))
+    assert later.total != pytest.approx(3000)          # not renormalised
+    assert later.snapshot == "010" and later.matched_fraction == pytest.approx(1.0)
+
+    # missing particles lose their stars, with a warning
+    keep = np.arange(len(ids)) % 4 != 0
+    with pytest.warns(RuntimeWarning, match="of the stars"):
+        part = pop.at_snapshot(ids[keep], halo["pos"][keep], halo["vel"][keep])
+    assert part.matched_fraction == pytest.approx(np.sum(pop.n_stars_all[keep]) / np.sum(pop.n_stars_all))
+
+    nope = paint(halo, "RRLyr", (20, 100), n_stars=3000)
+    with pytest.raises(ValueError, match="Pass ids"):
+        nope.at_snapshot(ids, halo["pos"], halo["vel"])
+
+
+def test_save_and_load_population(hernquist_halo, tmp_path):
+    halo = hernquist_halo
+    pop = paint(halo, "BHB", (20, 100), n_stars=1000, ids=halo["ids"], snapshot="000",
+                profile_kwargs={"rng": np.random.default_rng(5)})
+    pop.save(tmp_path / "bhb.h5")
+    loaded = load_population(tmp_path / "bhb.h5")
+    for name in ("tracer", "key", "reference", "url", "r_range", "fit_range", "scale", "snapshot"):
+        assert getattr(loaded, name) == getattr(pop, name), name
+    assert loaded.profile.params == pytest.approx(pop.profile.params)   # drawn parameters kept
+    r = np.geomspace(1, 200, 9)
+    np.testing.assert_allclose(loaded.profile(r), pop.profile(r))
+    with pytest.raises(ValueError, match="at_snapshot"):
+        loaded.total
+
+    a = pop.at_snapshot(halo["ids"], halo["pos"], halo["vel"])
+    b = loaded.at_snapshot(halo["ids"], halo["pos"], halo["vel"])
+    np.testing.assert_allclose(b.n_stars, a.n_stars)
+    assert b.total == pytest.approx(1000)
+
+    with pytest.raises(ValueError, match="Pass ids"):
+        paint(halo, "BHB", (20, 100)).save(tmp_path / "x.h5")
+
+
+def test_duplicate_ids_rejected(hernquist_halo):
+    """Regression: duplicated IDs in a later snapshot copied a particle's stars
+    onto each of them (matched_fraction > 1)."""
+    halo = hernquist_halo
+    pop = paint(halo, "RRLyr", (20, 100), n_stars=1000, ids=halo["ids"])
+    dup = halo["ids"].copy()
+    dup[1] = dup[0]
+    with pytest.raises(ValueError, match="duplicated"):
+        pop.at_snapshot(dup, halo["pos"], halo["vel"])
+    with pytest.raises(ValueError, match="duplicated"):
+        paint(halo, "RRLyr", (20, 100), ids=dup)

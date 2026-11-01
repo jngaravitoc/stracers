@@ -47,7 +47,10 @@ myst_enable_extensions = ["dollarmath"]
 
 # The tutorials live in tutorials/ at the top of the repository; copy the ones
 # shown in the docs next to tutorials.rst at build time (ignored by git).
-TUTORIALS = ["hernquist_tracers.ipynb", "tracer_kinematics.ipynb"]
+TUTORIALS = ["hernquist_tracers.ipynb", "tracer_kinematics.ipynb", "simulation_tracers.ipynb"]
+# the simulation tutorial needs local simulation data: it is committed with its
+# outputs and shown as it is
+nb_execution_excludepatterns = ["tutorials/simulation_tracers.ipynb"]
 (docs_root / "tutorials").mkdir(exist_ok=True)
 for name in TUTORIALS:
     shutil.copy(docs_root.parent / "tutorials" / name, docs_root / "tutorials" / name)
