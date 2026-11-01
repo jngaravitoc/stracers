@@ -155,7 +155,7 @@ the number in the range changes as they move::
 
 Give the halo centre of each snapshot as ``center``. Particles missing from
 a snapshot lose their stars, and a warning is issued if more than 1% of the
-stars are lost.
+stars are lost. IDs must be unique: duplicated IDs raise an error.
 
 Saving a population
 -------------------

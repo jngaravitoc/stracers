@@ -95,10 +95,11 @@ They are HDF5 attributes, or the first line of a CSV file.
 Large catalogues
 ----------------
 
-- **Memory.** Catalogues are written in chunks of ``chunk_size`` rows (default
-  10\ :sup:`7`). The chunks follow the expected number of stars, so particles
-  carrying many stars do not inflate a chunk, and memory stays at about one
-  chunk whatever the size of the catalogue.
+- **Memory.** Catalogues are written in chunks of at most ``chunk_size`` rows
+  (default 10\ :sup:`7`), even when a single particle carries more stars than
+  that, so memory stays at about one chunk whatever the size of the catalogue.
+- **IDs.** Particle IDs keep their integer type in both formats (also 64-bit
+  IDs above 2\ :sup:`53`); the column types are stored in the metadata.
 - **Size.** With all the columns a star takes ~45 bytes in float32, so 10\ :sup:`8`
   stars take ~4.5 GB. Use ``columns=`` to keep only what is needed,
   ``kind="particles"`` for statistics, and HDF5 (CSV warns above 10\ :sup:`7`

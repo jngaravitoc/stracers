@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 from stracers import paint_tracer, read_catalogue, write_catalogue
-from stracers.catalogue import COLUMNS
+from stracers.catalogue import COLUMNS, _chunks
 from stracers.kinematics import spherical_velocities
 
 
@@ -76,3 +76,38 @@ def test_catalogue_errors(population, tmp_path):
         write_catalogue(population, tmp_path / "e.h5", kind="stars", columns=["n_stars"])
     with pytest.raises(ValueError, match="kind"):
         write_catalogue(population, tmp_path / "f.h5", kind="galaxies")
+
+
+def test_chunks_bounded_for_concentrated_population(population):
+    """Regression: chunks only split between particles, so a particle with
+    many stars expanded to all of them at once. Rows per chunk are now at most
+    chunk_size, and the catalogue does not depend on chunk_size."""
+    pop = population.at_snapshot(population.ids, population.pos, population.vel)
+    i = np.flatnonzero(pop.in_range)[3]
+    pop.n_stars[i] = 1e5                                     # one particle with ~1e5 stars
+    ref = np.concatenate(list(_chunks(pop, "stars", np.random.default_rng(0), 10**9)))
+    for chunk_size in (1000, 7):
+        chunks = list(_chunks(pop, "stars", np.random.default_rng(0), chunk_size))
+        assert max(len(c) for c in chunks) <= chunk_size
+        np.testing.assert_array_equal(np.concatenate(chunks), ref)
+    assert np.sum(ref == i) > 9e4
+
+
+@pytest.mark.parametrize("ext", [".csv", ".h5"])
+@pytest.mark.parametrize("dtype, offset", [(np.int64, 9007199254740993), (np.uint64, 2**64 - 300_000)])
+def test_large_ids_roundtrip_exactly(hernquist_halo, tmp_path, ext, dtype, offset):
+    """Regression: CSV went through float64 and rounded IDs above 2^53."""
+    halo = hernquist_halo
+    # built in the target type: int64 + uint64 would promote to float64 (NumPy 1.x)
+    ids = np.arange(len(halo["pos"]), dtype=dtype) + dtype(offset)
+    assert len(np.unique(ids)) == len(ids)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        pop = paint_tracer(halo["pos"], halo["vel"], halo["pot"], halo["mass"], "RRLyr", (20, 100),
+                           n_stars=500, ids=ids)
+    for kind in ("stars", "particles"):
+        write_catalogue(pop, tmp_path / (kind + ext), kind=kind, rng=2)
+        cols, meta = read_catalogue(tmp_path / (kind + ext))
+        assert cols["id"].dtype == dtype and meta["dtypes"]["id"] == np.dtype(dtype).str
+        np.testing.assert_array_equal(cols["id"], pop.catalogue(kind=kind, rng=2)["id"])
+        assert len(np.unique(cols["id"])) == len(np.unique(pop.catalogue(kind=kind, rng=2)["id"]))

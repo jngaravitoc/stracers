@@ -76,25 +76,53 @@ def _rows(population, idx, columns, vcenter, dtype):
 
 
 def _chunks(population, kind, rng, chunk_size):
-    """Indices (particles, or particles repeated once per star) in chunks of ~chunk_size rows."""
+    """
+    Indices of the rows (particles, or particles repeated once per star) in
+    chunks of at most ``chunk_size`` rows.
+
+    For stars, Poisson counts are drawn for batches of at most ``chunk_size``
+    particles, in order, and the drawn stars are then split into row batches
+    of at most ``chunk_size``, also across the stars of a single particle, so
+    memory stays bounded even if one particle carries most of the stars. The
+    draws are sequential over the particles, so the catalogue does not depend
+    on ``chunk_size``.
+    """
     if kind == "particles":
         sel = np.flatnonzero(population.in_range)
         for start in range(0, len(sel), chunk_size):
             yield sel[start:start + chunk_size]
         return
     sel = np.flatnonzero(population.in_range & (population.n_stars > 0))
-    if len(sel) == 0:
-        return
-    # chunk boundaries from the expected number of stars, so that a chunk has
-    # ~chunk_size rows even when particles carry many stars each
-    expected = np.cumsum(population.n_stars[sel])
-    bounds = np.searchsorted(expected, np.arange(chunk_size, expected[-1], chunk_size), side="right")
-    edges = np.unique(np.concatenate([[0], bounds, [len(sel)]]))
-    for a, b in zip(edges[:-1], edges[1:]):
-        for start in range(a, b, chunk_size):  # also at most chunk_size particles
-            part = sel[start:min(b, start + chunk_size)]
-            counts = rng.poisson(population.n_stars[part])
-            yield np.repeat(part, counts)
+    pending = []  # (particles, counts) drawn but not yet yielded
+    n_pending = 0
+    for start in range(0, len(sel), chunk_size):
+        part = sel[start:start + chunk_size]
+        counts = rng.poisson(population.n_stars[part])
+        keep = counts > 0
+        part, counts = part[keep], counts[keep]
+        while len(part):
+            # take stars until the row batch is full, splitting a particle if needed
+            room = chunk_size - n_pending
+            cum = np.cumsum(counts)
+            k = np.searchsorted(cum, room, side="right")  # particles that fit whole
+            if k < len(part):
+                take_part = np.concatenate([part[:k], part[k:k + 1]])
+                take_counts = np.concatenate([counts[:k], [room - (cum[k - 1] if k else 0)]])
+                counts = counts[k:].copy()
+                counts[0] -= take_counts[-1]
+                part = part[k:]
+                if counts[0] == 0:
+                    part, counts = part[1:], counts[1:]
+            else:
+                take_part, take_counts = part, counts
+                part, counts = part[:0], counts[:0]
+            pending.append((take_part, take_counts))
+            n_pending += int(take_counts.sum())
+            if n_pending == chunk_size:
+                yield np.concatenate([np.repeat(p, c) for p, c in pending])
+                pending, n_pending = [], 0
+    if n_pending:
+        yield np.concatenate([np.repeat(p, c) for p, c in pending])
 
 
 def catalogue_columns(population, kind="stars", rng=None, columns=None, vcenter=None, dtype="float32"):
@@ -114,7 +142,7 @@ def catalogue_columns(population, kind="stars", rng=None, columns=None, vcenter=
     return {c: np.concatenate([p[c] for p in parts]) for c in columns}
 
 
-def _metadata(population, kind, columns, seed, vcenter, n_rows):
+def _metadata(population, kind, columns, seed, vcenter, n_rows, dtypes):
     def tolist(x):
         return None if x is None else np.asarray(x, dtype=float).tolist()
 
@@ -124,7 +152,7 @@ def _metadata(population, kind, columns, seed, vcenter, n_rows):
         "fit_range": list(population.fit_range), "kind": kind,
         "expected_stars": population.total, "n_rows": int(n_rows), "seed": seed,
         "snapshot": population.snapshot, "center": tolist(population.center),
-        "vcenter": tolist(vcenter), "columns": columns,
+        "vcenter": tolist(vcenter), "columns": columns, "dtypes": dtypes,
         "units": {c: UNITS[c] for c in columns},
         "frame": "galactocentric, relative to the halo centre",
         "stracers_version": _version(),
@@ -196,7 +224,9 @@ def write_catalogue(population, path, kind="stars", rng=None, columns=None, vcen
               for idx in _chunks(population, kind, rng, int(chunk_size)))
     writer = _write_hdf5 if fmt == "hdf5" else _write_csv
     n_rows = writer(path, chunks, population, columns, dtype, compression, chunk_size)
-    meta = _metadata(population, kind, columns, seed, vcenter, n_rows)
+    empty = _rows(population, np.zeros(0, dtype=int), columns, None, dtype)
+    dtypes = {c: empty[c].dtype.str for c in columns}
+    meta = _metadata(population, kind, columns, seed, vcenter, n_rows, dtypes)
     _store_metadata(path, fmt, meta)
     return n_rows
 
@@ -230,9 +260,12 @@ def _write_csv(path, chunks, population, columns, dtype, compression, chunk_size
         for rows in chunks:
             m = len(rows[columns[0]])
             if m:
-                # float64 holds the IDs (< 2^53) exactly, and %d formats them
-                np.savetxt(f, np.column_stack([rows[c].astype(np.float64) for c in columns]),
-                           fmt=fmts, delimiter=",")
+                # a structured array keeps each column's type, so integer IDs
+                # are written exactly (no float conversion)
+                table = np.empty(m, dtype=[(c, rows[c].dtype) for c in columns])
+                for c in columns:
+                    table[c] = rows[c]
+                np.savetxt(f, table, fmt=fmts, delimiter=",")
             n += m
             if n > _CSV_WARN_ROWS and not warned:
                 warnings.warn("CSV catalogues of more than {:.0e} rows are large and slow; "
@@ -286,10 +319,11 @@ def read_catalogue(path):
             raise ValueError("{} is not a stracers catalogue".format(path))
         meta = json.loads(first[len("# metadata: "):])
         f.readline()  # column names
-        data = np.loadtxt(f, delimiter=",", ndmin=2)
-    if data.size == 0:
-        data = np.zeros((0, len(meta["columns"])))
-    cols = {}
-    for i, c in enumerate(meta["columns"]):
-        cols[c] = data[:, i].astype(np.int64) if c == "id" else data[:, i]
-    return cols, meta
+        dtypes = meta.get("dtypes", {})
+        # parse each column with its recorded type: integer IDs stay exact
+        table_dtype = [(c, np.dtype(dtypes.get(c, "<i8" if c == "id" else "<f8")))
+                       for c in meta["columns"]]
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", UserWarning)  # empty catalogue
+            table = np.loadtxt(f, delimiter=",", dtype=table_dtype, ndmin=1)
+    return {c: np.asarray(table[c]) for c in meta["columns"]}, meta

@@ -255,6 +255,7 @@ class TracerPopulation:
             raise ValueError("Pass ids to paint_tracer to follow the population to other snapshots")
         r1, r2 = _check_range(self.r_range if r_range is None else r_range)
         pos = np.asarray(pos, dtype=float)
+        ids = _check_ids(ids, len(pos))
         if center is not None:
             center = np.asarray(center, dtype=float)
             pos = pos - center
@@ -268,7 +269,7 @@ class TracerPopulation:
         in_range = (r >= r1) & (r <= r2)
         return replace(
             self, r_range=(r1, r2), in_range=in_range, n_stars=np.where(in_range, n_all, 0.0),
-            pos=pos, vel=np.asarray(vel, dtype=float), n_stars_all=n_all, ids=np.asarray(ids),
+            pos=pos, vel=np.asarray(vel, dtype=float), n_stars_all=n_all, ids=ids,
             center=center, snapshot=snapshot, matched_fraction=matched,
         )
 
@@ -329,6 +330,17 @@ class TracerPopulation:
         rng = np.random.default_rng(rng)
         counts = rng.poisson(self.n_stars)
         return np.repeat(np.arange(len(self.n_stars)), counts)
+
+
+def _check_ids(ids, n, name="ids"):
+    """IDs as an array, one per particle and without duplicates."""
+    ids = np.asarray(ids)
+    if ids.shape != (n,):
+        raise ValueError("{} must have one value per particle".format(name))
+    if np.unique(ids).size != ids.size:
+        raise ValueError("{} contains duplicated IDs: the stars of a particle would be "
+                         "copied onto each of them".format(name))
+    return ids
 
 
 def _version():
@@ -449,9 +461,7 @@ def paint_tracer(pos, vel, pot, mass, tracer, r_range, *, key=None, n_stars=None
         center = np.asarray(center, dtype=float)
         pos = pos - center
     if ids is not None:
-        ids = np.asarray(ids)
-        if ids.shape != (len(pos),):
-            raise ValueError("ids must have one value per particle")
+        ids = _check_ids(ids, len(pos))
     r = np.linalg.norm(pos, axis=1)
     frac = result.weights * np.broadcast_to(np.asarray(mass, dtype=float), r.shape)
     in_range = (r >= r1) & (r <= r2)

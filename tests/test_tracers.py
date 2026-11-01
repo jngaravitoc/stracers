@@ -205,3 +205,16 @@ def test_save_and_load_population(hernquist_halo, tmp_path):
 
     with pytest.raises(ValueError, match="Pass ids"):
         paint(halo, "BHB", (20, 100)).save(tmp_path / "x.h5")
+
+
+def test_duplicate_ids_rejected(hernquist_halo):
+    """Regression: duplicated IDs in a later snapshot copied a particle's stars
+    onto each of them (matched_fraction > 1)."""
+    halo = hernquist_halo
+    pop = paint(halo, "RRLyr", (20, 100), n_stars=1000, ids=halo["ids"])
+    dup = halo["ids"].copy()
+    dup[1] = dup[0]
+    with pytest.raises(ValueError, match="duplicated"):
+        pop.at_snapshot(dup, halo["pos"], halo["vel"])
+    with pytest.raises(ValueError, match="duplicated"):
+        paint(halo, "RRLyr", (20, 100), ids=dup)
