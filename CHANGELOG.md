@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file. Versions fo
 change the API. Each release is tagged `vX.Y.Z` in git.
 
 ## [Unreleased]
+
+## [0.4.0] - 2026-11-01
 ### Added
 - `CONTRIBUTING.md`: development setup, workflow, tests, documentation and release steps
 - `tests/test_npaint.py`: the weights compared with the method of npaint (Errani & Peñarrubia
@@ -13,11 +15,14 @@ change the API. Each release is tagged `vX.Y.Z` in git.
 - `triple_power_law` (`"tpl"` in `get_profile`): a power law with two breaks, sharp or smoothed
 - Milky Way profile `"li2026"`: the doubly broken power law of Li et al. 2026 (ApJ, 999, 108,
   arXiv:2512.01350; Table 1, whole halo) fitted to DESI DR2 K giants at 8-200 kpc (breaks at
-  16.0 and 76.3 kpc, slopes -1.50, -3.45 and -5.20); new `r_break2` and `middle_slope` columns in the data file
+  16.0 and 76.3 kpc, slopes -1.50, -3.45 and -5.20); new `r_break2` and `middle_slope` columns
+  in the data file
 
 ### Changed
 - `choose_fit` now picks `"li2026"` for K giants in ranges within 8-200 kpc (it previously
   picked `"xue2015_bpl"`, with a warning beyond 80 kpc)
+- README: shorter, with an Install section on the requirements, installing from GitHub and the
+  optional extras
 
 ### Fixed
 - The weights page attributed to An & Evans (2006) a minimum inner slope for isotropic tracers
