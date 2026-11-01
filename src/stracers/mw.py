@@ -16,6 +16,7 @@ Examples
 """
 
 import csv
+import functools
 from importlib import resources
 
 import numpy as np
@@ -39,14 +40,20 @@ def _parse(row):
     return entry
 
 
+@functools.lru_cache(maxsize=1)
+def _table():
+    """The parsed data file, read once (callers get copies of the rows)."""
+    text = resources.files("stracers").joinpath("data", _DATA_FILE).read_text()
+    lines = [line for line in text.splitlines() if line and not line.startswith("#")]
+    return tuple(_parse(row) for row in csv.DictReader(lines))
+
+
 def load_table():
     """
     Return the compiled profiles as a list of dicts, one per row of the data
     file. Missing values are ``None``.
     """
-    text = resources.files("stracers").joinpath("data", _DATA_FILE).read_text()
-    lines = [line for line in text.splitlines() if line and not line.startswith("#")]
-    return [_parse(row) for row in csv.DictReader(lines)]
+    return [dict(entry) for entry in _table()]
 
 
 def available(model=None):
@@ -59,9 +66,9 @@ def available(model=None):
 
 def get_entry(key):
     """Return the table row (a dict) for ``key``."""
-    for entry in load_table():
+    for entry in _table():
         if entry["key"] == key:
-            return entry
+            return dict(entry)
     raise ValueError("Unknown profile {!r}; see stracers.mw.available()".format(key))
 
 
@@ -76,17 +83,22 @@ def reference_url(key):
     return "https://doi.org/" + entry["doi"]
 
 
-def _draw(value, err_minus, err_plus, rng):
+def _draw(value, err_minus, err_plus, rng, positive=False):
     """
     Draw a parameter quoted as value (-err_minus, +err_plus), read as the
     median and the 16th/84th percentiles: half-normals of width err_minus
-    below and err_plus above the value, each with probability 1/2.
+    below and err_plus above the value, each with probability 1/2. With
+    ``positive``, non-positive draws are rejected and drawn again (for radii).
     """
     if err_minus is None or err_plus is None:
         return value
-    if rng.uniform() < 0.5:
-        return value - abs(rng.normal(0.0, err_minus))
-    return value + abs(rng.normal(0.0, err_plus))
+    while True:
+        if rng.uniform() < 0.5:
+            draw = value - abs(rng.normal(0.0, err_minus))
+        else:
+            draw = value + abs(rng.normal(0.0, err_plus))
+        if draw > 0 or not positive:
+            return draw
 
 
 def mw_profile(key, r_core=1.0, smoothness=0.1, rng=None):
@@ -114,7 +126,8 @@ def mw_profile(key, r_core=1.0, smoothness=0.1, rng=None):
         If given, each parameter is drawn independently from its quoted
         uncertainties, read as median and 16th/84th percentiles (two
         half-normals joined at the median). Parameters without uncertainties
-        are kept fixed.
+        are kept fixed, and non-positive break radii are drawn again (this
+        matters for wide uncertainties, e.g. 26.5 +/- 8.9 kpc).
 
     Returns
     -------
@@ -126,7 +139,8 @@ def mw_profile(key, r_core=1.0, smoothness=0.1, rng=None):
     for name in _PARAMETERS[entry["model"]]:
         value = entry[name]
         if rng is not None:
-            value = _draw(value, entry[name + "_err_minus"], entry[name + "_err_plus"], rng)
+            value = _draw(value, entry[name + "_err_minus"], entry[name + "_err_plus"], rng,
+                          positive=(name == "r_break"))
         params[name] = value
 
     return profile_from_params(key, dict(params, r_core=r_core, smoothness=smoothness))

@@ -372,3 +372,44 @@ def test_outer_slope_jump_is_accounted():
     f_ref = np.array([(inner(e + h) - inner(e - h)) / (2 * h) for e in eps]) / (np.sqrt(8) * np.pi**2)
     above = eps > pm
     np.testing.assert_allclose(f_jump[above], f_ref[above], rtol=2e-2)
+
+
+def test_spline_with_few_radial_bins():
+    """Regression: the quartic spline needs 5 points, but 3 or 4 radial bins
+    were accepted; the degree is now lowered for few bins."""
+    from stracers.halos import sample_hernquist
+
+    pos, vel, pot = sample_hernquist(3000, 1e10, 10.0, seed=1)
+    res = compute_weights(pos, vel, pot, 1e10 / 3000, get_profile("hernquist", a=2.0),
+                          dlogr=1.0, stellar_mass=1.0)
+    assert np.sum(res.weights * 1e10 / 3000) == pytest.approx(1.0)
+    assert np.all(np.isfinite(res.weights))
+
+
+def test_r_trunc_cut_is_exact_on_coarse_energy_grid(hernquist_halo):
+    """Regression: the energy bin containing phi(r_trunc) was zeroed as a
+    whole, removing particles below the cut. The grid is now split at it."""
+    halo = hernquist_halo
+    res = run(halo, get_profile("hernquist", a=2.0), r_trunc=50.0, n_ebins=5)
+    phi_t = -np.interp(np.log(50.0), np.log(res.r_bins), res.psi)
+    E = particle_energy(halo)
+    assert np.any(np.isclose(res.E_edges, phi_t))
+    assert np.all(res.weights[res.mask & (E <= phi_t)] > 0)
+    assert np.all(res.weights[E > phi_t] == 0)
+
+
+@pytest.mark.parametrize("beyond_rmax", ["zero", "energy"])
+def test_unbound_particles_carry_no_stars(hernquist_halo, beyond_rmax):
+    """Regression: unbound particles in an energy bin straddling E = 0 got
+    weights. The grid is now split at E = 0 and their weights set to zero."""
+    halo = hernquist_halo
+    vel = halo["vel"].copy()
+    vel[np.arange(len(vel)) % 50 == 0] *= 1.8                   # some unbound particles
+    E = 0.5 * np.sum(vel**2, axis=1) + halo["pot"]
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        res = compute_weights(halo["pos"], vel, halo["pot"], halo["mass"], get_profile("hernquist", a=2.0),
+                              n_ebins=7, beyond_rmax=beyond_rmax)
+    assert np.sum(res.mask & (E >= 0)) > 100
+    assert np.all(res.weights[E >= 0] == 0)
+    assert np.any(np.isclose(res.E_edges, 0.0))

@@ -131,3 +131,14 @@ def test_plot_mw_profiles():
     assert all(t.startswith("$") and t.endswith("$") for t in texts)
     assert not any("&" in t for t in texts)
     plt.close(ax.figure)
+
+
+def test_drawn_break_radii_are_positive():
+    """Regression: faccioli2014 (r_break = 26.5 +/- 8.9 kpc) could draw
+    non-positive break radii, giving NaN profiles."""
+    rng = np.random.default_rng(0)
+    rb = np.array([mw.mw_profile("faccioli2014", rng=rng).params["r_break"] for _ in range(20000)])
+    assert np.all(rb > 0)
+    assert abs(np.median(rb) - 26.5) < 0.5
+    nu = mw.mw_profile("faccioli2014", rng=np.random.default_rng(int(np.argmin(rb))))
+    assert np.all(np.isfinite(nu(np.geomspace(0.1, 300, 50))))
