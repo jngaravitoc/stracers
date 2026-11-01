@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file. Versions fo
 change the API. Each release is tagged `vX.Y.Z` in git.
 
 ## [Unreleased]
+### Fixed
+- Unbound particles (E >= 0) could carry stars when their energy bin straddled E = 0; they now
+  never do, and the energy grid has an edge at E = 0
+- `r_trunc` zeroed the whole energy bin containing phi(r_trunc), removing particles below the cut
+  on coarse grids; the grid now has an exact edge at phi(r_trunc) (`energy_grid`), and particles
+  exactly at the cut belong to the bin below it (`energy_bins`), so the cut is exact
+- `double_power_law` (and smoothed broken power laws) overflowed for sharp transitions (large
+  `alpha`), dropping to zero far from the break; it is now evaluated in log space (and stays
+  finite at r = 0 for a flat inner slope, e.g. Plummer)
+- The smoothing spline of the potential failed with 3 or 4 radial bins; its degree is now lowered
+  for few bins
+- Drawing Milky Way profile parameters within their uncertainties could give non-positive break
+  radii (e.g. faccioli2014, 26.5 +/- 8.9 kpc) and NaN profiles; they are now drawn again
+
+### Changed
+- The Milky Way profile table is parsed once and cached: drawing profiles with `mw_profile` in a
+  loop is ~40 times faster
 ### Added
 - `CITATION.cff` with Laporte et al. (2013) and Garavito-Camargo et al. (2019), and a "Citing"
   section in the README

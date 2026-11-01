@@ -335,9 +335,15 @@ is listed in the API below.
    :math:`d^2\nu/d\Psi^2` by second-order finite differences on the radial
    grid.
 5. **Energy grid.** One linear grid of ``n_ebins`` bins spans the energies of
-   the selected particles. :math:`N(E)`, :math:`g(E)` and :math:`f_*(E)` are
-   evaluated at the same bin centres; :math:`N(E)` is the particle mass in each
-   bin divided by the bin width.
+   the selected particles, with an extra edge at :math:`E = 0` and, with
+   ``r_trunc``, at :math:`\Phi(r_t)`, so that no bin mixes bound and unbound
+   particles, or particles on both sides of the cut (`energy_grid`; a cut very
+   close to an existing edge moves that edge, rather than making a tiny bin).
+   A particle exactly on an edge belongs to the bin below it (`energy_bins`),
+   so particles with :math:`E = \Phi(r_t)` keep their stars. :math:`N(E)`,
+   :math:`g(E)` and :math:`f_*(E)` are evaluated at the same bin centres;
+   :math:`N(E)` is the particle mass in each bin divided by the bin width.
+   Unbound particles (:math:`E \ge 0`) carry no stars.
 6. **Density of states** (`density_of_states`). Eq. :eq:`gE` as a sum over the
    radial grid, plus the sphere inside the first bin,
 
@@ -368,7 +374,8 @@ is listed in the API below.
    adds to Eq. :eq:`eddington` is included.
    Bins with :math:`f_* < 0` are set to zero and counted in
    ``n_negative_f``. With ``r_trunc``, :math:`f_*` and the weights of all
-   particles with :math:`E > \Phi(r_t)` are set to zero.
+   particles with :math:`E > \Phi(r_t)` are set to zero (the grid has an edge
+   at :math:`\Phi(r_t)`, so the cut is exact).
 8. **Weights.** :math:`w = f_* g / N` in each bin (zero where :math:`N = 0`);
    each particle gets the weight of its bin (:func:`numpy.digitize`), and the
    weights are scaled to the stellar mass.
@@ -474,6 +481,8 @@ Algorithm steps
 .. autofunction:: stracers.weights.radial_potential
 .. autofunction:: stracers.weights.smooth_potential
 .. autofunction:: stracers.weights.tracer_derivatives
+.. autofunction:: stracers.weights.energy_grid
+.. autofunction:: stracers.weights.energy_bins
 .. autofunction:: stracers.weights.density_of_states
 .. autofunction:: stracers.weights.eddington
 .. autofunction:: stracers.weights.outer_eddington

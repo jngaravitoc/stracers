@@ -70,6 +70,10 @@ def test_double_power_law_special_cases():
     proportional(double_power_law(r, 3.0, -1.0, -4.0, alpha=1.0), hernquist(r, 3.0))
     proportional(double_power_law(r, 20.0, -1.0, -3.0, alpha=1.0), nfw(r, 20.0, 200.0))
     proportional(double_power_law(r, 2.0, 0.0, -5.0, alpha=2.0), plummer(r, 2.0))
+    # including r = 0 for a flat inner slope (regression: 0 * log(0) gave NaN)
+    r0 = np.array([0.0, 0.5, 2.0])
+    proportional(double_power_law(r0, 2.0, 0.0, -5.0, alpha=2.0), plummer(r0, 2.0))
+    assert double_power_law(0.0, 2.0, 0.0, -5.0, alpha=2.0) == pytest.approx(2**2.5)
     assert double_power_law(7.0, 7.0, -2.0, -4.0, alpha=3.0) == pytest.approx(1.0)
 
 
@@ -100,3 +104,25 @@ def test_short_names():
         [(3 / 20) ** -2.0, (30 / 20) ** -4.0],
     )
     assert get_profile("dpl", r_break=20.0, inner_slope=-2.0, outer_slope=-4.0, alpha=2.0)(20.0) == 1.0
+
+
+def test_double_power_law_sharp_transition_no_overflow():
+    """Regression: x**alpha overflowed for sharp transitions, so the density
+    dropped to zero far from the break."""
+    from stracers import broken_power_law, double_power_law
+
+    assert double_power_law(100.0, 1.0, -2.5, -4.5, alpha=200.0) == pytest.approx(1.007e-9, rel=1e-3)
+    r = np.geomspace(1e-3, 1e4, 200)
+    nu = double_power_law(r, 1.0, -2.5, -4.5, alpha=200.0)
+    assert np.all(np.isfinite(nu)) and np.all(nu > 0)
+    # far from the break it is a pure power law, with slope -4.5 outside
+    slope = np.diff(np.log(nu[-20:])) / np.diff(np.log(r[-20:]))
+    np.testing.assert_allclose(slope, -4.5, rtol=1e-6)
+    # also for broken power laws with a small smoothness (alpha = 1/smoothness)
+    assert broken_power_law(100.0, 1.0, -2.5, -4.5, smoothness=0.005) > 0
+
+
+def test_smoothed_broken_power_law_flat_inner_slope_at_centre():
+    from stracers import broken_power_law
+
+    assert broken_power_law(0.0, 2.0, 0.0, -5.0, smoothness=0.5) == pytest.approx(2**2.5)

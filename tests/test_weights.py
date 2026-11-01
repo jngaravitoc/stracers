@@ -6,7 +6,7 @@ from scipy.integrate import quad, trapezoid
 
 from conftest import G, hernquist_df, weighted_density
 from stracers import compute_weights, get_profile, truncate
-from stracers.weights import density_of_states, eddington
+from stracers.weights import density_of_states, eddington, energy_bins, energy_grid
 
 
 def run(halo, profile, **kwargs):
@@ -372,3 +372,75 @@ def test_outer_slope_jump_is_accounted():
     f_ref = np.array([(inner(e + h) - inner(e - h)) / (2 * h) for e in eps]) / (np.sqrt(8) * np.pi**2)
     above = eps > pm
     np.testing.assert_allclose(f_jump[above], f_ref[above], rtol=2e-2)
+
+
+def test_spline_with_few_radial_bins():
+    """Regression: the quartic spline needs 5 points, but 3 or 4 radial bins
+    were accepted; the degree is now lowered for few bins."""
+    from stracers.halos import sample_hernquist
+
+    pos, vel, pot = sample_hernquist(3000, 1e10, 10.0, seed=1)
+    res = compute_weights(pos, vel, pot, 1e10 / 3000, get_profile("hernquist", a=2.0),
+                          dlogr=1.0, stellar_mass=1.0)
+    assert np.sum(res.weights * 1e10 / 3000) == pytest.approx(1.0)
+    assert np.all(np.isfinite(res.weights))
+
+
+def test_r_trunc_cut_is_exact_on_coarse_energy_grid(hernquist_halo):
+    """Regression: the energy bin containing phi(r_trunc) was zeroed as a
+    whole, removing particles below the cut. The grid is now split at it."""
+    halo = hernquist_halo
+    res = run(halo, get_profile("hernquist", a=2.0), r_trunc=50.0, n_ebins=5)
+    phi_t = -np.interp(np.log(50.0), np.log(res.r_bins), res.psi)
+    E = particle_energy(halo)
+    assert np.any(np.isclose(res.E_edges, phi_t))
+    assert np.all(res.weights[res.mask & (E <= phi_t)] > 0)
+    assert np.all(res.weights[E > phi_t] == 0)
+
+
+@pytest.mark.parametrize("beyond_rmax", ["zero", "energy"])
+def test_unbound_particles_carry_no_stars(hernquist_halo, beyond_rmax):
+    """Regression: unbound particles in an energy bin straddling E = 0 got
+    weights. The grid is now split at E = 0 and their weights set to zero."""
+    halo = hernquist_halo
+    vel = halo["vel"].copy()
+    vel[np.arange(len(vel)) % 50 == 0] *= 1.8                   # some unbound particles
+    E = 0.5 * np.sum(vel**2, axis=1) + halo["pot"]
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        res = compute_weights(halo["pos"], vel, halo["pot"], halo["mass"], get_profile("hernquist", a=2.0),
+                              n_ebins=7, beyond_rmax=beyond_rmax)
+    assert np.sum(res.mask & (E >= 0)) > 100
+    assert np.all(res.weights[E >= 0] == 0)
+    assert np.any(np.isclose(res.E_edges, 0.0))
+
+
+def test_energy_grid_keeps_cuts_exact():
+    """Regression: a cut within 1e-6 of the range from an existing edge was
+    skipped, so particles just below it landed in a bin above the cut. The
+    nearby edge now moves onto the cut."""
+    edges = energy_grid(-100.0, 0.0, 5, cuts=[-39.99995])
+    assert np.any(edges == -39.99995) and len(edges) == 6          # moved, no tiny bin
+    assert energy_bins(np.array([-39.999975]), edges)[0] == 2      # below the cut ...
+    assert edges[3] == -39.99995                                   # ... bin 2 ends at it
+    # away from edges a cut is added; at an edge or outside the range nothing changes
+    np.testing.assert_allclose(energy_grid(-100.0, 0.0, 5, cuts=[-50.0]),
+                               [-100, -80, -60, -50, -40, -20, 0])
+    np.testing.assert_allclose(energy_grid(-100.0, 0.0, 5, cuts=[-40.0, 5.0]),
+                               np.linspace(-100, 0, 6))
+    # near the outer edges the cut is added, so the range itself is unchanged
+    edges = energy_grid(-100.0, 0.0, 5, cuts=[-1e-7])
+    assert edges[0] == -100.0 and edges[-1] == 0.0 and np.any(edges == -1e-7)
+
+
+def test_energy_at_a_cut_belongs_to_the_bin_below():
+    """Regression: np.digitize put values equal to an edge in the bin above,
+    so particles with E == phi(r_trunc) landed in the zeroed bin, although only
+    E > phi(r_trunc) is cut."""
+    edges = energy_grid(-100.0, 0.0, 5, cuts=[-50.0])
+    E = np.array([-50.0, -50.0 + 1e-9, -100.0, 0.0, -101.0, 1.0])
+    idx = energy_bins(E, edges)
+    assert edges[idx[0] + 1] == -50.0                              # E == cut: bin below
+    assert edges[idx[1]] == -50.0                                  # just above: bin above
+    assert idx[2] == 0 and idx[3] == len(edges) - 2                # the range edges
+    assert idx[4] == -1 and idx[5] == len(edges) - 1               # outside the grid

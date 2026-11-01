@@ -167,7 +167,8 @@ def smooth_potential(r_bins, phi, phi_err, n_fine, r_range=None):
     """
     Smooth <Phi>(r) with a spline and resample it on a fine radial grid.
 
-    A quartic smoothing spline is fitted to Phi(ln r) with weights
+    A quartic smoothing spline (lower degree for fewer than 5 bins) is fitted
+    to Phi(ln r) with weights
     1 / ``phi_err`` and smoothing factor equal to the number of bins (i.e. a
     chi^2 of one per bin), so that it follows the potential within its
     statistical errors.
@@ -200,7 +201,9 @@ def smooth_potential(r_bins, phi, phi_err, n_fine, r_range=None):
     lnr = np.log(r_bins)
     # floor the errors so that bins with ~exact potentials do not force interpolation
     err = np.maximum(phi_err, 1e-6 * np.abs(phi).max())
-    spl = UnivariateSpline(lnr, phi, w=1.0 / err, k=4, s=len(lnr))
+    # quartic, or lower when there are too few bins (a degree-k spline needs
+    # more than k points; radial_potential keeps at least 3 bins)
+    spl = UnivariateSpline(lnr, phi, w=1.0 / err, k=min(4, len(lnr) - 1), s=len(lnr))
     if r_range is None:
         r_range = (r_bins[0], r_bins[-1])
     ln_edges = np.linspace(np.log(r_range[0]), np.log(r_range[1]), n_fine + 1)
@@ -404,6 +407,39 @@ def _stellar_mass_inside(
     return m_star
 
 
+def energy_grid(E_min, E_max, n_ebins, cuts=()):
+    """
+    Edges of the energy grid: ``n_ebins`` linear bins between ``E_min`` and
+    ``E_max``, with an exact edge at each of ``cuts`` inside the range (e.g.
+    E = 0 and phi(r_trunc)), so that no bin straddles a cut. A cut closer
+    than 1e-6 of the range to an interior edge moves that edge onto it,
+    instead of making a tiny bin; otherwise it is added as a new edge.
+    """
+    edges = np.linspace(E_min, E_max, n_ebins + 1)
+    snap = 1e-6 * (E_max - E_min)
+    for cut in cuts:
+        if not E_min < cut < E_max or np.any(edges == cut):
+            continue
+        i = int(np.argmin(np.abs(edges - cut)))
+        if 0 < i < len(edges) - 1 and abs(edges[i] - cut) <= snap:
+            edges[i] = cut
+        else:
+            edges = np.sort(np.append(edges, cut))
+    return edges
+
+
+def energy_bins(E, edges):
+    """
+    Index of the energy bin of each value, with bins ``(edges[i],
+    edges[i + 1]]``: a value equal to an edge (e.g. a cut) belongs to the bin
+    below it. Values outside the grid get -1 or ``len(edges) - 1``, except the
+    lowest edge, which belongs to the first bin.
+    """
+    idx = np.digitize(E, edges, right=True) - 1
+    idx[np.asarray(E) == edges[0]] = 0
+    return idx
+
+
 def compute_weights(
     pos,
     vel,
@@ -560,11 +596,25 @@ def compute_weights(
     nu = np.asarray(tracer_profile(r_bins), dtype=float)
     dnu_dpsi, d2nu_dpsi2 = tracer_derivatives(nu, psi)
 
-    # Energy grid shared by N(E), g(E) and f(E)
-    E_edges = np.linspace(E.min(), E.max(), n_ebins + 1)
+    # Energy cut of r_trunc, needed before the energy grid
+    if r_trunc is not None:
+        if not r_bins[0] < r_trunc <= r_bins[-1]:
+            raise ValueError(
+                "r_trunc must lie within the radial range of the particles "
+                "({:.3g} to {:.3g} kpc)".format(r_bins[0], r_bins[-1])
+            )
+        phi_t = -np.interp(np.log(r_trunc), np.log(r_bins), psi)
+
+    # Energy grid shared by N(E), g(E) and f(E). It is split at E = 0 and at
+    # phi_t (r_trunc), so that no bin straddles them: unbound particles and
+    # particles beyond the energy cut then never share a bin, and so a weight,
+    # with eligible ones.
+    E_edges = energy_grid(E.min(), E.max(), n_ebins,
+                          cuts=[0.0] + ([phi_t] if r_trunc is not None else []))
+    n_ebins = len(E_edges) - 1
     E_centers = 0.5 * (E_edges[1:] + E_edges[:-1])
     dE = np.diff(E_edges)
-    e_idx = np.clip(np.digitize(E, E_edges) - 1, 0, n_ebins - 1)
+    e_idx = np.clip(energy_bins(E, E_edges), 0, n_ebins - 1)
 
     # N(E) and g(E) over the same volume: g(E) covers the sphere inside r_lo
     # plus the radial grid. The spline grid is continuous up to r_hi; the
@@ -601,17 +651,12 @@ def compute_weights(
         )
     f_E = np.clip(f_E, 0, None)
 
-    unbound_t = np.zeros(len(E), dtype=bool)
+    # unbound particles (E >= 0) carry no stars, and with r_trunc neither do
+    # particles with E > phi_t; the grid is split at both, so whole bins go
+    unbound_t = E >= 0
     if r_trunc is not None:
-        if not r_bins[0] < r_trunc <= r_bins[-1]:
-            raise ValueError(
-                "r_trunc must lie within the radial range of the particles "
-                "({:.3g} to {:.3g} kpc)".format(r_bins[0], r_bins[-1])
-            )
-        phi_t = -np.interp(np.log(r_trunc), np.log(r_bins), psi)
         f_E[E_centers > phi_t] = 0.0
-        # per particle as well, so that the bin containing phi_t is cut exactly
-        unbound_t = E > phi_t
+        unbound_t |= E > phi_t
 
     w_bins = np.zeros(n_ebins)
     good = N_E > 0
@@ -635,9 +680,8 @@ def compute_weights(
     if beyond_rmax == "energy":
         out = ~mask & (r_all > 0)
         E_out = 0.5 * np.sum(vel[out] ** 2, axis=1) + pot[out]
-        j = np.digitize(E_out, E_edges) - 1
-        j[E_out == E_edges[-1]] = n_ebins - 1
-        valid = (j >= 0) & (j < n_ebins)
+        j = energy_bins(E_out, E_edges)
+        valid = (j >= 0) & (j < n_ebins) & (E_out < 0)
         if r_trunc is not None:
             valid &= E_out <= phi_t
         w_out = np.zeros(len(E_out))
