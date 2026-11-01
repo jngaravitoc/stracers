@@ -12,6 +12,7 @@ explains the method and how the weights are computed.
    weights/index
    profiles/index
    mw/index
+   kinematics/index
    nstars/index
    io/index
    halos/index

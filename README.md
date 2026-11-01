@@ -72,6 +72,19 @@ nu = mw.mw_profile("medina2024")                      # cored (1 kpc), smoothed 
 nu = mw.mw_profile("medina2024", rng=np.random.default_rng(0))   # parameters drawn within errors
 ```
 
+## Kinematics of the tracers
+
+The stars move with the particles that carry them, so their velocities and velocity dispersions are
+weighted averages over the particles:
+
+```python
+prof = stracers.velocity_profile(pos, vel, res.weights, bins=np.geomspace(1, 100, 11))
+prof.sigma_r, prof.sigma_theta, prof.sigma_phi, prof.beta, prof.mean_vphi, prof.n_eff
+v_r, v_theta, v_phi = stracers.kinematics.spherical_velocities(pos, vel)
+```
+
+See [tutorials/tracer_kinematics.ipynb](tutorials/tracer_kinematics.ipynb).
+
 ## Counting stars
 
 `stracers.number_of_stars` gives the number of stars in a range of

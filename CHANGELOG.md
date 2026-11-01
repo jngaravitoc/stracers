@@ -13,6 +13,11 @@ change the API. Each release is tagged `vX.Y.Z` in git.
   `stracers.plotting.LATEX_STYLE` for Computer Modern fonts
 - Milky Way page of the documentation: links to the papers in the tables, a list of references
   with arXiv links, and figures for RR Lyrae, BHB stars, and giants and other tracers
+- `stracers.kinematics`: velocities and velocity dispersions of the tracers with the weights:
+  `spherical_velocities`, `weighted_mean`, `weighted_dispersion`, `bulk_velocity`, `anisotropy` and
+  `velocity_profile` (radial profiles of mean velocities, dispersions, anisotropy and effective
+  number of particles), tested against the Jeans equation; a user-guide page and the tutorial
+  `tutorials/tracer_kinematics.ipynb`
 
 ## [0.2.1] - 2026-10-31
 ### Fixed

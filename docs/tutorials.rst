@@ -10,3 +10,4 @@ simulation data and are run when the documentation is built. They are in the
    :maxdepth: 1
 
    tutorials/hernquist_tracers
+   tutorials/tracer_kinematics

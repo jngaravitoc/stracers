@@ -17,9 +17,10 @@ from .profiles import (
 )
 from .weights import WeightsResult, compute_weights
 from .io import load_weights, match_weights, save_weights
-from . import halos, mw
+from . import halos, kinematics, mw
 from . import nstars
 from .nstars import number_of_stars, number_of_stars_table
+from .kinematics import velocity_profile
 
 __version__ = "0.2.1"
 
@@ -41,6 +42,8 @@ __all__ = [
     "match_weights",
     "mw",
     "halos",
+    "kinematics",
+    "velocity_profile",
     "nstars",
     "number_of_stars",
     "number_of_stars_table",

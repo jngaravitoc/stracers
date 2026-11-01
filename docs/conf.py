@@ -47,7 +47,7 @@ myst_enable_extensions = ["dollarmath"]
 
 # The tutorials live in tutorials/ at the top of the repository; copy the ones
 # shown in the docs next to tutorials.rst at build time (ignored by git).
-TUTORIALS = ["hernquist_tracers.ipynb"]
+TUTORIALS = ["hernquist_tracers.ipynb", "tracer_kinematics.ipynb"]
 (docs_root / "tutorials").mkdir(exist_ok=True)
 for name in TUTORIALS:
     shutil.copy(docs_root.parent / "tutorials" / name, docs_root / "tutorials" / name)
