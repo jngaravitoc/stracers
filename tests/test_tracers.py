@@ -1,3 +1,5 @@
+import pathlib
+import re
 import warnings
 
 import numpy as np
@@ -109,3 +111,41 @@ def test_paint_tracer_options_and_errors(hernquist_halo):
         paint(halo, "BHB", (20, 100), rmax=50.0)
     with pytest.raises(ValueError, match="needs ref_range"):
         paint(halo, "BHB", (20, 100), n_ref=10)
+
+
+def test_documented_spellings_resolve():
+    """Every spelling listed in the "Tracer names" table of the user guide is
+    accepted (regression: "bhb stars" was documented but rejected)."""
+    page = (pathlib.Path(__file__).parents[1] / "docs" / "tracers" / "index.rst").read_text()
+    table = page.split("Tracer names")[1].split("Choosing the fit")[0]
+    spellings = re.findall(r'``"([^"]+)"``', table)
+    assert "bhb stars" in spellings and len(spellings) >= 15
+    for name in spellings:
+        assert tracer_fits(name), name
+
+
+def test_range_validated_with_explicit_key(hernquist_halo):
+    """A key given by the user must not bypass the radial-range checks."""
+    halo = hernquist_halo
+    with pytest.raises(ValueError, match="0 < r1 < r2"):
+        paint(halo, "BHB", (100, 20), key="thomas2018", n_stars=10)
+    with pytest.raises(ValueError, match="0 < r1 < r2"):
+        paint(halo, "BHB", (0, 20), key="thomas2018")
+    with pytest.raises(ValueError, match="ref_range"):
+        paint(halo, "BHB", (20, 100), key="thomas2018", n_ref=10, ref_range=(50, 30))
+
+
+def test_normalisation_needs_tracer_stars(hernquist_halo):
+    """Normalising to a range without weighted particles raises instead of
+    giving NaN or infinite star counts."""
+    halo = hernquist_halo
+    r = np.linalg.norm(halo["pos"], axis=1)
+    keep = (r < 40) | (r > 50)                               # an empty shell
+    sub = {k: (v[keep] if np.ndim(v) else v) for k, v in halo.items() if k != "ids"}
+    with pytest.raises(ValueError, match="No tracer stars in r_range"):
+        paint(sub, "RRLyr", (41, 49), n_stars=100)
+    with pytest.raises(ValueError, match="No tracer stars in ref_range"):
+        paint(sub, "RRLyr", (20, 100), n_ref=100, ref_range=(41, 49))
+    # without normalisation an empty range is allowed: it just has no stars
+    pop = paint(sub, "RRLyr", (41, 49))
+    assert pop.total == 0 and len(pop.draw_stars(rng=0)) == 0

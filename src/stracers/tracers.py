@@ -34,7 +34,8 @@ __all__ = ["available_tracers", "tracer_fits", "choose_fit", "paint_tracer", "Tr
 _TRACERS = {
     "RR Lyrae": (("rrlyr", "rrl", "rrlyrae", "rrlyra"), ("RRLs", "RRab")),
     "RRab": (("rrab",), ("RRab",)),
-    "BHB": (("bhb", "bluehorizontalbranch"), ("BHB stars", "BHB and BS stars")),
+    "BHB": (("bhb", "bhbstar", "bluehorizontalbranch", "bluehorizontalbranchstar"),
+            ("BHB stars", "BHB and BS stars")),
     "K giants": (("kgiant",), ("K giants",)),
     "M giants": (("mgiant",), ("M giants",)),
     "Giants": (("giant",), ("Giant stars", "K giants", "M giants")),
@@ -74,6 +75,14 @@ def tracer_fits(tracer):
     return [e["key"] for e in mw.load_table() if e["tracer"] in populations]
 
 
+def _check_range(r_range, name="r_range"):
+    """(r1, r2) as floats, with 0 < r1 < r2."""
+    r1, r2 = map(float, r_range)
+    if not 0 < r1 < r2:
+        raise ValueError("{} must be (r1, r2) with 0 < r1 < r2, got {}".format(name, tuple(r_range)))
+    return r1, r2
+
+
 def _year(entry):
     match = re.search(r"(\d{4})", entry["reference"])
     return int(match.group(1)) if match else 0
@@ -109,9 +118,7 @@ def choose_fit(tracer, r_range):
     str
         Key of the fit in :mod:`stracers.mw`.
     """
-    r1, r2 = map(float, r_range)
-    if not 0 < r1 < r2:
-        raise ValueError("r_range must be (r1, r2) with 0 < r1 < r2")
+    r1, r2 = _check_range(r_range)
     entries = [mw.get_entry(k) for k in tracer_fits(tracer)]
     covering = [e for e in entries if (e["r_min"] or 0.0) <= r1 and e["r_max"] >= r2]
     if covering:
@@ -208,6 +215,18 @@ class TracerPopulation:
         return np.repeat(np.arange(len(self.n_stars)), counts)
 
 
+def _tracer_fraction(frac, sel, name, r_range):
+    """Fraction of the tracer population in a selection; must be positive to normalise."""
+    total = np.sum(frac[sel])
+    if not (np.isfinite(total) and total > 0):
+        raise ValueError(
+            "No tracer stars in {} = {:g}-{:g} kpc ({} particles, all with zero weight or none "
+            "selected), so it cannot be used to normalise the population".format(
+                name, r_range[0], r_range[1], int(np.sum(sel)))
+        )
+    return total
+
+
 def paint_tracer(pos, vel, pot, mass, tracer, r_range, *, key=None, n_stars=None, n_ref=None,
                  ref_range=None, profile_kwargs=None, center=None, **weights_kwargs):
     """
@@ -249,7 +268,10 @@ def paint_tracer(pos, vel, pot, mass, tracer, r_range, *, key=None, n_stars=None
     if n_ref is not None and ref_range is None:
         raise ValueError("n_ref needs ref_range")
     name = _resolve(tracer)
-    r1, r2 = map(float, r_range)
+    # validated here, before a key given by the user bypasses choose_fit
+    r1, r2 = _check_range(r_range)
+    if ref_range is not None:
+        ref_range = _check_range(ref_range, "ref_range")
     if key is None:
         key = choose_fit(tracer, (r1, r2))
     elif key not in tracer_fits(tracer):
@@ -272,10 +294,10 @@ def paint_tracer(pos, vel, pot, mass, tracer, r_range, *, key=None, n_stars=None
 
     scale = 1.0
     if n_stars is not None:
-        scale = n_stars / np.sum(frac[in_range])
+        scale = n_stars / _tracer_fraction(frac, in_range, "r_range", (r1, r2))
     elif n_ref is not None:
         in_ref = (r >= ref_range[0]) & (r <= ref_range[1])
-        scale = n_ref / np.sum(frac[in_ref])
+        scale = n_ref / _tracer_fraction(frac, in_ref, "ref_range", ref_range)
 
     entry = mw.get_entry(key)
     return TracerPopulation(
