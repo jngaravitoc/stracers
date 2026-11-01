@@ -22,10 +22,10 @@ import numpy as np
 
 from .profiles import broken_power_law, power_law
 
-__all__ = ["load_table", "available", "get_entry", "mw_profile"]
+__all__ = ["load_table", "available", "get_entry", "reference_url", "mw_profile"]
 
 _DATA_FILE = "mw_stellar_halo_profiles.csv"
-_TEXT_COLUMNS = ("key", "model", "tracer", "reference", "note")
+_TEXT_COLUMNS = ("key", "model", "tracer", "reference", "note", "arxiv", "doi")
 _PARAMETERS = {"spl": ("slope",), "bpl": ("r_break", "inner_slope", "outer_slope")}
 
 
@@ -63,6 +63,17 @@ def get_entry(key):
         if entry["key"] == key:
             return entry
     raise ValueError("Unknown profile {!r}; see stracers.mw.available()".format(key))
+
+
+def reference_url(key):
+    """
+    Link to the paper of a profile: its arXiv abstract page, or its DOI for
+    the papers that are not on arXiv.
+    """
+    entry = get_entry(key)
+    if entry["arxiv"]:
+        return "https://arxiv.org/abs/" + entry["arxiv"]
+    return "https://doi.org/" + entry["doi"]
 
 
 def _draw(value, err_minus, err_plus, rng):

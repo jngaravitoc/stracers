@@ -2,36 +2,37 @@
 # Compiled in Medina et al. 2024, MNRAS, 531, 4762, Table 6 (doi:10.1093/mnras/stae1137).
 # model: spl = simple power law (slope); bpl = broken power law (r_break, inner_slope, outer_slope).
 # Errors are given as positive minus/plus uncertainties; empty fields mean not available.
+# arxiv: arXiv identifier of the reference; doi: DOI, given only for the two papers not on arXiv.
 # r_break, r_min and r_max are galactocentric radii in kpc; [r_min, r_max] is the range fitted.
-key,model,slope,slope_err_minus,slope_err_plus,r_break,r_break_err_minus,r_break_err_plus,inner_slope,inner_slope_err_minus,inner_slope_err_plus,outer_slope,outer_slope_err_minus,outer_slope_err_plus,r_min,r_max,tracer,reference,note
-wetterer1996,spl,-3.03,0.08,0.08,,,,,,,,,,1,80,RRLs,Wetterer & McGraw 1996,
-vivas2006,spl,-2.8,,,,,,,,,,,,4,60,RRLs,Vivas & Zinn 2006,approximate value (~-2.8)
-bell2008,spl,-3.0,,,,,,,,,,,,5,40,MSTO stars,Bell et al. 2008,
-depropris2010,spl,-2.5,0.2,0.2,,,,,,,,,,10,90,BHB stars,"De Propris, Harrison, & Mares 2010",
-deason2011_spl,spl,-2.7,0.5,0.5,,,,,,,,,,,40,BHB stars,"Deason, Belokurov, & Evans 2011",range quoted as <40 kpc
-sesar2013,spl,-2.42,0.13,0.13,,,,,,,,,,5,30,RRab,Sesar et al. 2013,
-deason2014,spl,-6.0,,,,,,,,,,,,50,100,A-type stars,Deason et al. 2014,upper limit: slope < -6
-cohen2017,spl,-4.0,,,,,,,,,,,,50,90,RRab,Cohen et al. 2017,
-xue2015_spl,spl,-3.4,0.1,0.1,,,,,,,,,,10,80,K giants,Xue et al. 2015,
-slater2016,spl,-3.5,0.2,0.2,,,,,,,,,,30,90,Giant stars,Slater et al. 2016,
-iorio2018,spl,-2.96,0.05,0.05,,,,,,,,,,,28,RRLs,Iorio et al. 2018,range quoted as <28 kpc
-medina2018,spl,-4.17,0.2,0.18,,,,,,,,,,17,145,RRLs,Medina et al. 2018,
-feng2024,spl,-4.09,0.1,0.1,,,,,,,,,,20,300,RRLs,Feng et al. 2024,
-lopezcorredoira2024_k,spl,-4.6,0.4,0.4,,,,,,,,,,25,90,K giants,Lopez-Corredoira et al. 2024,
-lopezcorredoira2024_m,spl,-4.5,0.2,0.2,,,,,,,,,,25,90,M giants,Lopez-Corredoira et al. 2024,
-yu2024,spl,-4.28,0.13,0.12,,,,,,,,,,20,70,BHB stars,Yu et al. 2024,
-keller2008,bpl,,,,45,,,-2.48,0.09,0.09,-5.0,0.3,0.3,10,80,RRLs,Keller et al. 2008,
-watkins2009,bpl,,,,23,,,-2.4,,,-4.5,,,5,100,RRLs,Watkins et al. 2009,
-deason2011_bpl,bpl,,,,27,1,1,-2.3,0.1,0.1,-4.6,0.1,0.2,10,45,BHB and BS stars,"Deason, Belokurov, & Evans 2011",
-sesar2011,bpl,,,,28,,,-2.6,0.04,0.04,-3.8,0.1,0.1,12,40,near MSTO stars,"Sesar, Juric, & Ivezic 2011",
-akhter2012,bpl,,,,45,,,-2.78,0.02,0.02,-5.0,0.2,0.2,10,80,RRLs,Akhter et al. 2012,
-faccioli2014,bpl,,,,26.5,8.9,8.9,-2.7,0.6,0.6,-3.6,0.4,0.4,9,49,RRLs,Faccioli et al. 2014,
-zinn2014,bpl,,,,24,,,-2.8,0.5,0.5,-5.4,0.5,0.5,5,60,RRLs,Zinn et al. 2014,
-piladiez2015,bpl,,,,20,,,-2.5,0.4,0.4,-4.9,0.4,0.4,10,60,F stars,Pila-Diez et al. 2015,
-xue2015_bpl,bpl,,,,18,1,1,-2.1,0.3,0.3,-3.8,0.1,0.1,10,80,K giants,Xue et al. 2015,
-das2016,bpl,,,,29.87,3.55,2.8,-3.61,0.16,0.15,-4.75,0.28,0.3,10,70,BHB stars,"Das, Williams, & Binney 2016",
-thomas2018,bpl,,,,41.4,2.4,2.5,-4.24,0.08,0.08,-3.21,0.07,0.07,15,220,BHB stars,Thomas et al. 2018,outer slope shallower than inner
-fukushima2019,bpl,,,,160,19,18,-2.9,0.3,0.3,-15.0,3.7,4.5,35,360,BHB stars,Fukushima et al. 2019,
-stringer2021,bpl,,,,32.1,0.9,1.1,-2.54,0.09,0.09,-5.42,0.14,0.13,9,100,RRLs,Stringer et al. 2021,
-chen2023,bpl,,,,31.11,5.88,7.61,-2.46,0.2,0.18,-3.99,1.33,0.75,,80,RRLs,Chen et al. 2023,range quoted as <80 kpc
-medina2024,bpl,,,,18.1,1.1,2.1,-2.05,0.15,0.13,-4.47,0.18,0.11,7,145,RRLs,Medina et al. 2024,
+key,model,slope,slope_err_minus,slope_err_plus,r_break,r_break_err_minus,r_break_err_plus,inner_slope,inner_slope_err_minus,inner_slope_err_plus,outer_slope,outer_slope_err_minus,outer_slope_err_plus,r_min,r_max,tracer,reference,note,arxiv,doi
+wetterer1996,spl,-3.03,0.08,0.08,,,,,,,,,,1,80,RRLs,Wetterer & McGraw 1996,,,10.1086/118076
+vivas2006,spl,-2.8,,,,,,,,,,,,4,60,RRLs,Vivas & Zinn 2006,approximate value (~-2.8),astro-ph/0604359,
+bell2008,spl,-3.0,,,,,,,,,,,,5,40,MSTO stars,Bell et al. 2008,,0706.0004,
+depropris2010,spl,-2.5,0.2,0.2,,,,,,,,,,10,90,BHB stars,"De Propris, Harrison, & Mares 2010",,1007.0013,
+deason2011_spl,spl,-2.7,0.5,0.5,,,,,,,,,,,40,BHB stars,"Deason, Belokurov, & Evans 2011",range quoted as <40 kpc,1104.3220,
+sesar2013,spl,-2.42,0.13,0.13,,,,,,,,,,5,30,RRab,Sesar et al. 2013,,1305.2160,
+deason2014,spl,-6.0,,,,,,,,,,,,50,100,A-type stars,Deason et al. 2014,upper limit: slope < -6,1403.7205,
+cohen2017,spl,-4.0,,,,,,,,,,,,50,90,RRab,Cohen et al. 2017,,1710.01276,
+xue2015_spl,spl,-3.4,0.1,0.1,,,,,,,,,,10,80,K giants,Xue et al. 2015,,1506.06144,
+slater2016,spl,-3.5,0.2,0.2,,,,,,,,,,30,90,Giant stars,Slater et al. 2016,,1610.02034,
+iorio2018,spl,-2.96,0.05,0.05,,,,,,,,,,,28,RRLs,Iorio et al. 2018,range quoted as <28 kpc,1707.03833,
+medina2018,spl,-4.17,0.2,0.18,,,,,,,,,,17,145,RRLs,Medina et al. 2018,,1802.01581,
+feng2024,spl,-4.09,0.1,0.1,,,,,,,,,,20,300,RRLs,Feng et al. 2024,,2402.05418,
+lopezcorredoira2024_k,spl,-4.6,0.4,0.4,,,,,,,,,,25,90,K giants,Lopez-Corredoira et al. 2024,,2402.05157,
+lopezcorredoira2024_m,spl,-4.5,0.2,0.2,,,,,,,,,,25,90,M giants,Lopez-Corredoira et al. 2024,,2402.05157,
+yu2024,spl,-4.28,0.13,0.12,,,,,,,,,,20,70,BHB stars,Yu et al. 2024,,2402.00104,
+keller2008,bpl,,,,45,,,-2.48,0.09,0.09,-5.0,0.3,0.3,10,80,RRLs,Keller et al. 2008,,0711.2337,
+watkins2009,bpl,,,,23,,,-2.4,,,-4.5,,,5,100,RRLs,Watkins et al. 2009,,0906.0498,
+deason2011_bpl,bpl,,,,27,1,1,-2.3,0.1,0.1,-4.6,0.1,0.2,10,45,BHB and BS stars,"Deason, Belokurov, & Evans 2011",,1104.3220,
+sesar2011,bpl,,,,28,,,-2.6,0.04,0.04,-3.8,0.1,0.1,12,40,near MSTO stars,"Sesar, Juric, & Ivezic 2011",,1011.4487,
+akhter2012,bpl,,,,45,,,-2.78,0.02,0.02,-5.0,0.2,0.2,10,80,RRLs,Akhter et al. 2012,,,10.1088/0004-637X/756/1/23
+faccioli2014,bpl,,,,26.5,8.9,8.9,-2.7,0.6,0.6,-3.6,0.4,0.4,9,49,RRLs,Faccioli et al. 2014,,1404.6318,
+zinn2014,bpl,,,,24,,,-2.8,0.5,0.5,-5.4,0.5,0.5,5,60,RRLs,Zinn et al. 2014,,1312.1602,
+piladiez2015,bpl,,,,20,,,-2.5,0.4,0.4,-4.9,0.4,0.4,10,60,F stars,Pila-Diez et al. 2015,,1502.02460,
+xue2015_bpl,bpl,,,,18,1,1,-2.1,0.3,0.3,-3.8,0.1,0.1,10,80,K giants,Xue et al. 2015,,1506.06144,
+das2016,bpl,,,,29.87,3.55,2.8,-3.61,0.16,0.15,-4.75,0.28,0.3,10,70,BHB stars,"Das, Williams, & Binney 2016",,1608.07297,
+thomas2018,bpl,,,,41.4,2.4,2.5,-4.24,0.08,0.08,-3.21,0.07,0.07,15,220,BHB stars,Thomas et al. 2018,outer slope shallower than inner,1809.08245,
+fukushima2019,bpl,,,,160,19,18,-2.9,0.3,0.3,-15.0,3.7,4.5,35,360,BHB stars,Fukushima et al. 2019,,1904.04966,
+stringer2021,bpl,,,,32.1,0.9,1.1,-2.54,0.09,0.09,-5.42,0.14,0.13,9,100,RRLs,Stringer et al. 2021,,2011.13930,
+chen2023,bpl,,,,31.11,5.88,7.61,-2.46,0.2,0.18,-3.99,1.33,0.75,,80,RRLs,Chen et al. 2023,range quoted as <80 kpc,2307.15385,
+medina2024,bpl,,,,18.1,1.1,2.1,-2.05,0.15,0.13,-4.47,0.18,0.11,7,145,RRLs,Medina et al. 2024,,2402.14055,

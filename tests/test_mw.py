@@ -90,3 +90,44 @@ def test_steep_outer_slope_gradient_mode_is_finite(hernquist_halo):
         res = compute_weights(halo["pos"], halo["vel"], halo["pot"], halo["mass"], nu,
                               derivative="gradient")
     assert np.all(np.isfinite(res.weights))
+
+
+def test_every_profile_has_a_link():
+    """Each fit has an arXiv identifier, or a DOI for the papers not on arXiv."""
+    for e in mw.load_table():
+        assert bool(e["arxiv"]) != bool(e["doi"]), e["key"]
+    assert mw.reference_url("medina2024") == "https://arxiv.org/abs/2402.14055"
+    assert mw.reference_url("vivas2006") == "https://arxiv.org/abs/astro-ph/0604359"
+    assert mw.reference_url("wetterer1996") == "https://doi.org/10.1086/118076"
+    # the two fits of one paper share its link
+    assert mw.reference_url("xue2015_spl") == mw.reference_url("xue2015_bpl")
+
+
+def test_plot_mw_profiles():
+    matplotlib = pytest.importorskip("matplotlib")
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    from stracers.plotting import plot_mw_profiles
+
+    tracers = ["BHB stars", "BHB and BS stars"]
+    keys = [e["key"] for e in mw.load_table() if e["tracer"] in tracers]
+    ax = plot_mw_profiles(tracers=tracers, r_extrap=200.0)
+    solid = [l for l in ax.get_lines() if l.get_linestyle() == "-"]
+    dashed = [l for l in ax.get_lines() if l.get_linestyle() == "--"]
+    assert len(solid) == len(keys)
+    # fits that end before 200 kpc are extrapolated with a dashed line up to it
+    n_extrap = sum(mw.get_entry(k)["r_max"] < 200.0 for k in keys)
+    assert len(dashed) == n_extrap
+    assert all(np.isclose(l.get_xdata()[-1], 200.0) for l in dashed)
+    # solid lines span the fitted range, and profiles are 1 at r_norm = 30 kpc
+    fuk = solid[keys.index("fukushima2019")]
+    assert np.isclose(fuk.get_xdata()[0], 35.0) and np.isclose(fuk.get_xdata()[-1], 360.0)
+    das = solid[keys.index("das2016")]                   # fitted over 10-70 kpc
+    assert np.isclose(np.interp(np.log(30.0), np.log(das.get_xdata()), das.get_ydata()), 1.0, rtol=1e-3)
+    # all the text is in LaTeX math mode
+    texts = [t.get_text() for t in ax.get_legend().get_texts()]
+    texts += [ax.get_xlabel(), ax.get_ylabel()]
+    assert all(t.startswith("$") and t.endswith("$") for t in texts)
+    assert not any("&" in t for t in texts)
+    plt.close(ax.figure)

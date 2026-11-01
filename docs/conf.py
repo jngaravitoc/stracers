@@ -72,15 +72,38 @@ def _range(entry):
     return "{:g}–{:g}".format(entry["r_min"], entry["r_max"])
 
 
+def _link(entry):
+    # anonymous hyperlink: the same reference text appears in several rows
+    return "`{} <{}>`__".format(entry["reference"], mw.reference_url(entry["key"]))
+
+
 with open(docs_root / "mw" / "spl.csv", "w", newline="") as f_spl, \
         open(docs_root / "mw" / "bpl.csv", "w", newline="") as f_bpl:
     spl, bpl = csv.writer(f_spl), csv.writer(f_bpl)
     for e in mw.load_table():
         if e["model"] == "spl":
-            spl.writerow([e["key"], _fmt(e, "slope"), _range(e), e["tracer"], e["reference"]])
+            spl.writerow([e["key"], _fmt(e, "slope"), _range(e), e["tracer"], _link(e)])
         else:
             bpl.writerow([e["key"], _fmt(e, "r_break"), _fmt(e, "inner_slope"),
-                          _fmt(e, "outer_slope"), _range(e), e["tracer"], e["reference"]])
+                          _fmt(e, "outer_slope"), _range(e), e["tracer"], _link(e)])
+
+# List of the references of the compilation, with their arXiv (or DOI) links
+_refs = {}
+for e in mw.load_table():
+    ident = "arXiv:" + e["arxiv"] if e["arxiv"] else "doi:" + e["doi"]
+    _refs.setdefault(e["reference"], (ident, mw.reference_url(e["key"])))
+with open(docs_root / "mw" / "references.inc", "w") as f:
+    for ref, (ident, url) in sorted(_refs.items(), key=lambda kv: kv[0].lower()):
+        f.write("- {}, `{} <{}>`__\n".format(ref, ident, url))
+
+# Figures made with the plot directive (mw/index.rst), in LaTeX style
+from stracers.plotting import LATEX_STYLE  # noqa: E402
+
+plot_rcparams = dict(LATEX_STYLE, **{"savefig.bbox": "tight"})  # keep the legend
+plot_formats = [("png", 110)]
+plot_html_show_formats = False
+plot_html_show_source_link = False
+plot_include_source = False
 
 # HTML
 html_theme = "pydata_sphinx_theme"

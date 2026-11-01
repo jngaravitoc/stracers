@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file. Versions fo
 change the API. Each release is tagged `vX.Y.Z` in git.
 
 ## [Unreleased]
+### Added
+- `arxiv` and `doi` columns in the Milky Way profile data file (all 28 papers; DOIs only for the two
+  not on arXiv) and `stracers.mw.reference_url`
+- `stracers.plotting.plot_mw_profiles`: the Milky Way profiles over their fitted ranges (solid) and
+  extrapolated to 200 kpc (dashed), normalised at 30 kpc, with all text in LaTeX math mode;
+  `stracers.plotting.LATEX_STYLE` for Computer Modern fonts
+- Milky Way page of the documentation: links to the papers in the tables, a list of references
+  with arXiv links, and figures for RR Lyrae, BHB stars, and giants and other tracers
 
 ## [0.2.1] - 2026-10-31
 ### Fixed

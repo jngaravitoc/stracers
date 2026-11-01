@@ -2,7 +2,7 @@ import warnings
 
 import numpy as np
 import pytest
-from scipy.integrate import quad
+from scipy.integrate import quad, trapezoid
 
 from conftest import G, hernquist_df, weighted_density
 from stracers import compute_weights, get_profile, truncate
@@ -367,7 +367,7 @@ def test_outer_slope_jump_is_accounted():
     # f = d/deps [ int_0^eps dnu/dpsi / sqrt(eps - psi) dpsi ] / (sqrt(8) pi^2)
     def inner(e):
         g = grid[grid < e]
-        return np.trapz(np.interp(g, grid, d1_pw) / np.sqrt(e - g + 1e-300), g)
+        return trapezoid(np.interp(g, grid, d1_pw) / np.sqrt(e - g + 1e-300), g)
     h = 1e-3
     f_ref = np.array([(inner(e + h) - inner(e - h)) / (2 * h) for e in eps]) / (np.sqrt(8) * np.pi**2)
     above = eps > pm

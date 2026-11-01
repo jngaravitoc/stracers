@@ -16,7 +16,9 @@ the radial range of each fit, the tracer and the reference.
 The compilation
 ===============
 
-Radii are galactocentric, in kpc; the range is the one used in each fit.
+Radii are galactocentric, in kpc; the range is the one used in each fit, and
+each reference links to its paper on arXiv (or its DOI, for the two papers that
+are not on arXiv).
 Slopes are logarithmic slopes of the number density, :math:`d\ln n/d\ln r`.
 
 Simple power laws (``"spl"``), :math:`n \propto r^{\gamma}`:
@@ -39,6 +41,57 @@ Broken power laws (``"bpl"``), with slope :math:`\gamma_{in}` inside
 Some entries need care: ``deason2014`` is an upper limit (slope < −6),
 ``vivas2006`` an approximate value, and ``thomas2018`` has an outer slope
 shallower than its inner one.
+
+The profiles
+============
+
+The figures show the profiles in their published form (no core, sharp
+breaks), each normalised to 1 at 30 kpc (dotted line). Each profile is a solid
+line over the radial range of its fit, and a dashed line extrapolating it out
+to 200 kpc. Fits quoted only with an outer radius (e.g. "<40 kpc") are drawn
+from 1 kpc, and the profiles whose fits do not reach 30 kpc are normalised with
+their extrapolation.
+
+RR Lyrae
+--------
+
+.. plot::
+
+   from stracers.plotting import plot_mw_profiles
+   ax = plot_mw_profiles(tracers=["RRLs", "RRab"])
+   ax.set_title(r"$\mathrm{RR\ Lyrae\ (RRLs\ and\ RRab)}$")
+
+Blue horizontal branch stars
+----------------------------
+
+.. plot::
+
+   from stracers.plotting import plot_mw_profiles
+   ax = plot_mw_profiles(tracers=["BHB stars", "BHB and BS stars"])
+   ax.set_title(r"$\mathrm{Blue\ horizontal\ branch\ stars}$")
+
+Giants and other tracers
+------------------------
+
+K, M and other giants, main-sequence turn-off (MSTO), F and A-type stars:
+
+.. plot::
+
+   from stracers.plotting import plot_mw_profiles
+   ax = plot_mw_profiles(tracers=["Giant stars", "K giants", "M giants", "MSTO stars",
+                                  "near MSTO stars", "F stars", "A-type stars"])
+   ax.set_title(r"$\mathrm{Giants\ and\ other\ tracers}$")
+
+The figures are made with `stracers.plotting.plot_mw_profiles`, in LaTeX style
+(Computer Modern, all text in math mode) with
+`stracers.plotting.LATEX_STYLE`::
+
+    import matplotlib.pyplot as plt
+    from stracers.plotting import plot_mw_profiles, LATEX_STYLE
+
+    with plt.rc_context(LATEX_STYLE):
+        ax = plot_mw_profiles(tracers=["RRLs", "RRab"])
+        ax.figure.savefig("mw_rrl.pdf", bbox_inches="tight")
 
 Using the profiles
 ==================
@@ -115,9 +168,15 @@ Caveats
 References
 ==========
 
+The compilation is from
+
 - Medina, G. E., et al. 2024, MNRAS, 531, 4762,
-  `doi:10.1093/mnras/stae1137 <https://doi.org/10.1093/mnras/stae1137>`_. The
-  references of the individual fits are listed in the table.
+  `arXiv:2402.14055 <https://arxiv.org/abs/2402.14055>`__,
+  `doi:10.1093/mnras/stae1137 <https://doi.org/10.1093/mnras/stae1137>`__
+
+and the fits are from
+
+.. include:: references.inc
 
 API
 ===
