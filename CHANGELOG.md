@@ -6,8 +6,8 @@ change the API. Each release is tagged `vX.Y.Z` in git.
 
 ## [Unreleased]
 ### Changed
-- README: tables of the tutorials (with links to the documentation), the built-in tracer density
-  profiles, and the 32 Milky Way profiles with their tracers and references
+- README: a table of the tutorials (with links to the documentation), the list of built-in tracer
+  density profiles, and a table of the 32 Milky Way profiles with their tracers and references
 
 ## [0.4.0] - 2026-11-01
 ### Added
